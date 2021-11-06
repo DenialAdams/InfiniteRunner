@@ -50,17 +50,16 @@ proc reset_game() {
    TIME_DEAD = 0;
    PLAYER_X = 0.0;
    PLAYER_Y = 0.0;
-   FORWARD_SPEED = 1.0;
+   FORWARD_SPEED = 1.2;
    JUMP_SPEED = 0.0;
    JUMP_STATE = JumpState::Standing;
-   RNG = 01189998819991197253;
+   RNG = 2;
    for i in 0..OBSTACLE_COUNT {
       OBSTACLES[i] = Obstacle {
          x: -100.0,
          y: -100.0,
       };
    }
-   trace("Reset game called");
 }
 
 proc start() {
@@ -120,14 +119,14 @@ proc update() {
       }
 
       if one_in(100) {
-         if !(OBSTACLES[0].x >= (PLAYER_X - 10.0)) and !obstacles_too_close {
+         if !(OBSTACLES[0].x >= (PLAYER_X - 20.0)) and !obstacles_too_close {
             OBSTACLES[0].x = intended_position;
             OBSTACLES[0].y = 0.0;
          }
       }
 
       if one_in(100) {
-         if !(OBSTACLES[1].x >= (PLAYER_X - 10.0)) and !obstacles_too_close {
+         if !(OBSTACLES[1].x >= (PLAYER_X - 20.0)) and !obstacles_too_close {
             OBSTACLES[1].x = intended_position;
             OBSTACLES[1].y = 0.0;
          }
