@@ -1,15 +1,12 @@
-static GAME_OVER: bool;
 static PLAYER_X: f64;
 static PLAYER_Y: f64;
 static FORWARD_SPEED: f64;
 static JUMP_SPEED: f64;
 static JUMP_STATE: JumpState;
 static RNG: u64;
-static OBSTACLES: [Obstacle; 2];
+static OBSTACLES: [Obstacle; 4];
+static OBSTACLE_COUNT: usize;
 static SCORE_BUF: [u8; 10];
-static TIME_DEAD: u64;
-
-const OBSTACLE_COUNT: usize = 2;
 
 struct Obstacle {
    x: f64,
@@ -45,50 +42,39 @@ func rectangles_collide(x1: f64, y1: f64, width1: f64, height1: f64, x2: f64, y2
     (y1 + height1 > y2);
 }
 
-proc reset_game() {
-   GAME_OVER = false;
-   TIME_DEAD = 0;
+proc start() {
+   *PALETTE = [16774867, 16361589, 15428463, 8142680];
    PLAYER_X = 0.0;
    PLAYER_Y = 0.0;
    FORWARD_SPEED = 1.0;
    JUMP_SPEED = 0.0;
    JUMP_STATE = JumpState::Standing;
    RNG = 01189998819991197253;
+   OBSTACLE_COUNT = 4;
    for i in 0..OBSTACLE_COUNT {
       OBSTACLES[i] = Obstacle {
          x: -100.0,
          y: -100.0,
       };
    }
-   trace("Reset game called");
-}
-
-proc start() {
-   *PALETTE = [16774867, 16361589, 15428463, 8142680];
-   reset_game();
 }
 
 proc update() {
-   if GAME_OVER {
-      TIME_DEAD = TIME_DEAD + 1;
-   }
-
-   // Move player forward
-   if FORWARD_SPEED < 5.0 and !GAME_OVER {
+   if FORWARD_SPEED < 5.0 and FORWARD_SPEED > 0.0 {
       FORWARD_SPEED = FORWARD_SPEED + 0.001;
    }
    PLAYER_X = PLAYER_X + FORWARD_SPEED;
 
-   // Handle input
+   // Always keep camera centered
+   let camera_offset_x = PLAYER_X - 10.0;
+   let camera_offset_y: f64 = -140.0;
+
    let button_pressed = ((*GAMEPADS)[0] & BUTTON_1) > 0;
    let mouse_pressed = (*MOUSE_BUTTONS & 1) > 0;
-   if (button_pressed | mouse_pressed) and JUMP_STATE == JumpState::Standing and !GAME_OVER {
+   if (button_pressed | mouse_pressed) and JUMP_STATE == JumpState::Standing and FORWARD_SPEED > 0.0 {
       JUMP_STATE = JumpState::Jumping;
       JUMP_SPEED = 10.0;
       tone(300 | (800 << 16), 6, 50, TONE_MODE1);
-   } else if (button_pressed | mouse_pressed) and TIME_DEAD >= 5 {
-      reset_game();
-      return;
    }
 
    // Do jumping
@@ -120,49 +106,42 @@ proc update() {
       }
 
       if one_in(100) {
-         if !(OBSTACLES[0].x >= (PLAYER_X - 10.0)) and !obstacles_too_close {
-            OBSTACLES[0].x = intended_position;
-            OBSTACLES[0].y = 0.0;
+         if !(OBSTACLES[0].x >= (PLAYER_X - 10.0)) {
+            if !obstacles_too_close {
+               OBSTACLES[0].x = intended_position;
+               OBSTACLES[0].y = 0.0;
+            }
          }
       }
 
       if one_in(100) {
-         if !(OBSTACLES[1].x >= (PLAYER_X - 10.0)) and !obstacles_too_close {
-            OBSTACLES[1].x = intended_position;
-            OBSTACLES[1].y = 0.0;
+         if !(OBSTACLES[1].x >= (PLAYER_X - 10.0)) {
+            if !obstacles_too_close {
+               OBSTACLES[1].x = intended_position;
+               OBSTACLES[1].y = 0.0;
+            }
          }
       }
    }
 
-   // Die
+   // Draw player
+   rect((PLAYER_X - camera_offset_x) truncate i32, (-PLAYER_Y - camera_offset_y) truncate i32, 10, 20);
+
+   // Draw obstacles
+   for i in 0..OBSTACLE_COUNT {
+      rect((OBSTACLES[i].x - camera_offset_x) truncate i32, (-OBSTACLES[i].y - camera_offset_y + 10.0) truncate i32, 10, 10);
+   }
+
    for i in 0..OBSTACLE_COUNT {
       if rectangles_collide(PLAYER_X, PLAYER_Y, 10.0, 20.0, OBSTACLES[i].x, OBSTACLES[i].y, 10.0, 10.0) {
          text("GAME OVER.", 5, 30);
-         text("Jump to restart.", 5, 50);
-         GAME_OVER = true;
+         text("Press R to restart.", 5, 50);
          FORWARD_SPEED = 0.0;
+         JUMP_SPEED = 0.0;
          JUMP_STATE = JumpState::Standing;
       }
    }
 
-   // Draw world
-   {
-      // Always keep camera centered
-      let camera_offset_x = PLAYER_X - 10.0;
-      let camera_offset_y: f64 = -140.0;
-
-      // Draw player
-      rect((PLAYER_X - camera_offset_x) truncate i32, (-PLAYER_Y - camera_offset_y) truncate i32, 10, 20);
-
-      // Draw obstacles
-      for i in 0..OBSTACLE_COUNT {
-         rect((OBSTACLES[i].x - camera_offset_x) truncate i32, (-OBSTACLES[i].y - camera_offset_y + 10.0) truncate i32, 10, 10);
-      }
-   }
-
-   // Draw UI
-   {
-      text("SCORE: ", 2, 2);
-      text(int_to_string((PLAYER_X / 10.0) truncate u32, &SCORE_BUF), 47, 2);
-   }
+   text("SCORE: ", 2, 2);
+   text(int_to_string((PLAYER_X / 10.0) truncate u32, &SCORE_BUF), 47, 2);
 }
