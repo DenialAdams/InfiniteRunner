@@ -64,6 +64,7 @@ proc reset_game() {
 
 proc start() {
    *PALETTE = [16774867, 16361589, 15428463, 8142680];
+   *SYSTEM_FLAGS = SYSTEM_HIDE_GAMEPAD_OVERLAY;
    reset_game();
 }
 
@@ -80,7 +81,7 @@ proc update() {
 
    // Handle input
    let button_pressed = ((*GAMEPADS)[0] & BUTTON_1) > 0;
-   let mouse_pressed = (*MOUSE_BUTTONS & 1) > 0;
+   let mouse_pressed = (*MOUSE_BUTTONS & MOUSE_LEFT) > 0;
    if (button_pressed | mouse_pressed) and JUMP_STATE == JumpState::Standing and !GAME_OVER {
       JUMP_STATE = JumpState::Jumping;
       JUMP_SPEED = 10.0;
