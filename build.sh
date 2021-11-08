@@ -1,1 +1,1 @@
-rolandc infinite-runner.rol --wasm4
+rolandc endless-runner.rol --wasm4
