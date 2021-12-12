@@ -37,7 +37,7 @@ proc one_in(x: u64) -> bool {
    return rand_range(0, x - 1) == 0;
 }
 
-func rectangles_collide(x1: f64, y1: f64, width1: f64, height1: f64, x2: f64, y2: f64, width2: f64, height2: f64) -> bool {
+proc rectangles_collide(x1: f64, y1: f64, width1: f64, height1: f64, x2: f64, y2: f64, width2: f64, height2: f64) -> bool {
    return
     (x2 + width2 > x1) &
     (y2 + height2 > y1) &
