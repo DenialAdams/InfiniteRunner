@@ -724,8 +724,9 @@ proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
 // Ghost code
 static TIME_ALIVE: u64;
 
-const GHOST_SPAWN_TIME: u64 = 60*120; // 5 seconds timer for ghost. TODO update.
+const GHOST_SPAWN_TIME: u64 = 60*120; // Number of frames after which the ghost should spawn.
 static GHOST_IS_PRESENT: bool;
+static GHOST_FACING_LEFT: bool;
 static GHOST_POSITION: Position;
 const GHOST_HEIGHT: u32 = 30;
 const GHOST_WIDTH: u32 = 30;
@@ -754,11 +755,13 @@ proc maybe_spawn_ghost() {
 proc move_ghost() {
    // if player x > ghost x, ghost x++
    // if player x < ghost x, ghost x--
-   if (PLAYER_POSITION.x >= GHOST_POSITION.x) {
+   if (PLAYER_POSITION.x > GHOST_POSITION.x) {
       GHOST_POSITION.x = GHOST_POSITION.x+1.0;
+      GHOST_FACING_LEFT = false;
    }
    else {
       GHOST_POSITION.x = GHOST_POSITION.x-1.0;
+      GHOST_FACING_LEFT = true;
    }
    if (PLAYER_POSITION.y >= GHOST_POSITION.y) {
       GHOST_POSITION.y = GHOST_POSITION.y+1.0;
@@ -770,7 +773,27 @@ proc move_ghost() {
 
 // TODO: add some other color to the ghost to make it stand out.
 proc draw_ghost(camera_offset_x: f64, camera_offset_y: f64) {
-   rect((GHOST_POSITION.x - camera_offset_x) truncate i32, (GHOST_POSITION.y - camera_offset_y) truncate i32, GHOST_WIDTH, GHOST_HEIGHT);
+   // Draw ghost body.
+   let ghost_draw_x = (GHOST_POSITION.x - camera_offset_x) truncate i32;
+   let ghost_draw_y = (GHOST_POSITION.y - camera_offset_y) truncate i32;
+   rect(ghost_draw_x, ghost_draw_y, GHOST_WIDTH, GHOST_HEIGHT);
+   // Draw ghost eyes.
+
+   let ghost_left_eye_x = ghost_draw_x;
+   let ghost_right_eye_x = ghost_draw_x;
+   if (GHOST_FACING_LEFT) {
+      ghost_left_eye_x =  ghost_left_eye_x + 5;
+      ghost_right_eye_x =  ghost_right_eye_x + 10;
+   }
+   else {
+      ghost_left_eye_x =  ghost_left_eye_x + 15;
+      ghost_right_eye_x =  ghost_right_eye_x + 20;    
+   }
+   rect(ghost_right_eye_x, ghost_draw_y+6, 4, 5);
+   rect(ghost_left_eye_x, ghost_draw_y+4, 4, 5); 
+   // draw mouth
+   rect(ghost_left_eye_x, ghost_draw_y+12, 12, 10);
+  
 }
 
 proc game_over() {
