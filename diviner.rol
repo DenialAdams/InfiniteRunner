@@ -449,10 +449,10 @@ proc sim(dt: f64) {
 
    let offset: f64 = 0.0;
    if go_left {
-      PLAYER_POSITION.x = PLAYER_POSITION.x - (1.0 * dt);
+      PLAYER_POSITION.x = PLAYER_POSITION.x - (1.2 * dt);
       offset = TILE_WIDTH;
    } else if go_right {
-      PLAYER_POSITION.x = PLAYER_POSITION.x + (1.0 * dt);
+      PLAYER_POSITION.x = PLAYER_POSITION.x + (1.2 * dt);
       offset = TILE_WIDTH*-1.0;
    }
 
@@ -525,7 +525,7 @@ proc sim(dt: f64) {
 
             let x = ((i % 40) * 16) truncate f64;
             let y = ((i / 40) * 16) truncate f64;
-            if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y - 1.0, PLAYER_WIDTH, PLAYER_HEIGHT, x, y, TILE_WIDTH, TILE_HEIGHT) {
+            if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y + 0.1, PLAYER_WIDTH, PLAYER_HEIGHT, x, y, TILE_WIDTH, TILE_HEIGHT) {
                ontop = true;
                break;
             }
