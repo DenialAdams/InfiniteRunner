@@ -673,14 +673,14 @@ const FALLING_SPRITE_X: i32 = 340;
 // Frames since the game has begun. Game runs at 60 fps.
 static FRAME_COUNT:u32 = 0;
 
-proc advance_animation_and_return_x(anim_cycle: AnimationCycle, seconds_to_advance: f64) -> i32 {
-   anim_cycle.current_time_in_animation_seconds = anim_cycle.current_time_in_animation_seconds + seconds_to_advance;
-   if (anim_cycle.current_time_in_animation_seconds >= anim_cycle.animation_length_seconds) {
-      anim_cycle.current_time_in_animation_seconds = 0.0;
+proc advance_animation_and_return_x(anim_cycle: &AnimationCycle, seconds_to_advance: f64) -> i32 {
+   (*anim_cycle).current_time_in_animation_seconds = (*anim_cycle).current_time_in_animation_seconds + seconds_to_advance;
+   if ((*anim_cycle).current_time_in_animation_seconds >= (*anim_cycle).animation_length_seconds) {
+      (*anim_cycle).current_time_in_animation_seconds = 0.0;
    }
    // Calculate the location of the correct sprite.
-   let sprite_index = ((anim_cycle.current_time_in_animation_seconds/anim_cycle.animation_length_seconds) * anim_cycle.animation_sprites truncate f64) truncate i32;
-   let x = anim_cycle.starting_animation_x + anim_cycle.offset_between_sprites*sprite_index;
+   let sprite_index = (((*anim_cycle).current_time_in_animation_seconds/(*anim_cycle).animation_length_seconds) * (*anim_cycle).animation_sprites truncate f64) truncate i32;
+   let x = (*anim_cycle).starting_animation_x + (*anim_cycle).offset_between_sprites*sprite_index;
    return x;
 }
 
@@ -696,9 +696,9 @@ proc get_next_player_sprite_x(current_jump_state: JumpState, previous_jump_state
       return FALLING_SPRITE_X;
    }
    if (PLAYER_MOVED_ON_LAST_FRAME) {
-      return advance_animation_and_return_x(RUNNING_CYCLE, (1.0/60.0));
+      return advance_animation_and_return_x(&RUNNING_CYCLE, (1.0/60.0));
    }
-   return advance_animation_and_return_x(IDLE_CYCLE, (1.0/60.0));
+   return advance_animation_and_return_x(&IDLE_CYCLE, (1.0/60.0));
    //    RUNNING_CYCLE.current_time_in_animation_seconds = RUNNING_CYCLE.current_time_in_animation_seconds + (1.0/60.0);
    //    if (RUNNING_CYCLE.current_time_in_animation_seconds >= RUNNING_CYCLE.animation_length_seconds) {
    //       RUNNING_CYCLE.current_time_in_animation_seconds = 0.0;
@@ -707,7 +707,7 @@ proc get_next_player_sprite_x(current_jump_state: JumpState, previous_jump_state
    //    let sprite_index = ((RUNNING_CYCLE.current_time_in_animation_seconds/RUNNING_CYCLE.animation_length_seconds) * RUNNING_CYCLE.animation_sprites truncate f64) truncate i32;
    //    let x = RUNNING_CYCLE.starting_animation_x + RUNNING_CYCLE.offset_between_sprites*sprite_index;
    //    return x;
-   // }
+   // // }
 }
 
 proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
@@ -716,7 +716,7 @@ proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
 
    let current_sprite_y: i32 = 0;
    let current_sprite_x: i32 = get_next_player_sprite_x(jump_state, PREVIOUS_JUMP_STATE);
-   blit_sub(&PLAYER_SPRITESHEET[0], player_x -1 , player_y - 2, 20, 18, current_sprite_x, current_sprite_y, PLAYER_SPRITESHEET_WIDTH, PLAYER_SPREADSHEET_FLAGS);
+   blit_sub(&PLAYER_SPRITESHEET[0], player_x -1 , player_y - 2, 20, 18, current_sprite_x, current_sprite_y, PLAYER_SPRITESHEET_WIDTH, PLAYER_SPREADSHEET_FLAGS | (PLAYER_FACING_LEFT extend u32 << 1));
    // one array for jumping (8 sprites), one array for running (2 sprites), one array for idle (8 sprites).
    *DRAW_COLORS = tmp;
 }
