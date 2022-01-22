@@ -6,6 +6,11 @@ static RNG: u64;
 static SCORE_BUF: [u8; 10];
 static TIME_DEAD: u64;
 
+static HALLWAY_ROOMS: [[Tile; 100]; 1];
+static LANDING_ROOMS: [[Tile; 100]; 2];
+static DROP_ROOMS: [[Tile; 100]; 1];
+static BONUS_ROOMS: [[Tile; 100]; 1];
+
 static TILES: [Tile; 1600];
 
 const CAMERAS: [Position; 16] = [
@@ -32,7 +37,6 @@ struct Position {
    x: f64,
    y: f64,
 }
-
 
 struct Tile {
    solid: bool,
@@ -73,6 +77,84 @@ proc rectangles_collide(x1: f64, y1: f64, width1: f64, height1: f64, x2: f64, y2
       (height1 + y1 > y2);
 }
 
+proc make_maps() {
+   let w = Tile {
+      solid: true,
+   };
+   let o = Tile {
+      solid: false,
+   };
+
+   DROP_ROOMS[0] =
+   [
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      w,o,o,w,w,w,w,o,o,w,
+   ];
+
+   HALLWAY_ROOMS[0] =
+   [
+      w,w,w,w,w,w,w,w,w,w,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+
+   LANDING_ROOMS[0] =
+   [
+      o,o,o,o,o,o,o,o,o,o,
+      o,w,o,o,o,o,o,o,o,o,
+      o,o,w,o,o,o,o,o,o,o,
+      o,o,o,w,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,w,w,w,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,w,w,w,o,o,w,w,w,o,
+      o,o,o,o,o,o,o,o,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+   LANDING_ROOMS[1] =
+   [
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+
+   BONUS_ROOMS[0] =
+   [
+      w,w,w,w,w,w,w,w,w,w,
+      w,w,w,w,w,w,w,w,w,w,
+      w,w,w,w,w,w,w,w,w,w,
+      w,w,w,w,w,w,w,w,w,w,
+      w,w,w,w,w,w,w,w,w,w,
+      w,w,w,w,w,w,w,w,w,w,
+      w,w,w,w,w,w,w,w,w,w,
+      w,w,w,w,w,w,w,w,w,w,
+      w,w,w,w,w,w,w,w,w,w,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+}
+
 proc reset_game() {
    GAME_OVER = false;
    TIME_DEAD = 0;
@@ -93,6 +175,39 @@ proc reset_game() {
    }
 
    carve_path();
+
+   // ensure that the player can't yeet out of the map
+
+   // top row
+   let max: usize = 40;
+   for i in 0..max {
+      TILES[i].solid = true;
+   }
+
+   // bottom row
+   max = 1600;
+   for i in 1560..max {
+      TILES[i].solid = true;
+   }
+
+   // left column
+   let i: usize = 0;
+   loop {
+      TILES[i].solid = true;
+      i = i + 40;
+      if i >= 1600 {
+         break;
+      }
+   }
+
+   i = 39;
+   loop {
+      TILES[i].solid = true;
+      i = i + 40;
+      if i >= 1600 {
+         break;
+      }
+   }
 }
 
 proc carve_path() {
@@ -102,10 +217,19 @@ proc carve_path() {
 
    let current_cell = starting_cell truncate i32;
 
-   // 00 01 02 03
-   // 04 05 06 07
-   // 08 09 10 11
-   // 12 13 14 15
+   let LEFT_EXIT: u8 = 1;
+   let RIGHT_EXIT: u8 = 2;
+   let UP_EXIT: u8 = 4;
+   let DOWN_EXIT: u8 = 8;
+   let resulting_types: [u8; 16] =
+      [0, 0, 0, 0,
+       0, 0, 0, 0,
+       0, 0, 0, 0,
+       0, 0, 0, 0];
+      // 00 01 02 03
+      // 04 05 06 07
+      // 08 09 10 11
+      // 12 13 14 15
 
    loop {
       let where_to_go = rand_range(1, 5);
@@ -138,70 +262,159 @@ proc carve_path() {
       let current_row = current_cell / 4;
       let current_col = current_cell % 4;
 
+      let cur_cell_usize = current_cell transmute usize;
+      let resulting_cell = (current_cell + direction) transmute usize;
       if direction == -1 {
-         // remove the left wall
-         let start_index = ((current_row * 400) + current_col * 10) transmute usize;
-         TILES[start_index + 40].solid = false;
-         TILES[start_index + 80].solid = false;
-         TILES[start_index + 120].solid = false;
-         TILES[start_index + 160].solid = false;
-         TILES[start_index + 200].solid = false;
-         TILES[start_index + 240].solid = false;
-         TILES[start_index + 280].solid = false;
-         TILES[start_index + 320].solid = false;
-         TILES[start_index + 39].solid = false;
-         TILES[start_index + 79].solid = false;
-         TILES[start_index + 119].solid = false;
-         TILES[start_index + 159].solid = false;
-         TILES[start_index + 199].solid = false;
-         TILES[start_index + 239].solid = false;
-         TILES[start_index + 279].solid = false;
-         TILES[start_index + 319].solid = false;
+         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
+         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
+         resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
+         resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
       } else if direction == 1 {
-         let start_index = (((current_row * 400) + current_col * 10) + 9) transmute usize;
-         TILES[start_index + 40].solid = false;
-         TILES[start_index + 80].solid = false;
-         TILES[start_index + 120].solid = false;
-         TILES[start_index + 160].solid = false;
-         TILES[start_index + 200].solid = false;
-         TILES[start_index + 240].solid = false;
-         TILES[start_index + 280].solid = false;
-         TILES[start_index + 320].solid = false;
-         TILES[start_index + 41].solid = false;
-         TILES[start_index + 81].solid = false;
-         TILES[start_index + 121].solid = false;
-         TILES[start_index + 161].solid = false;
-         TILES[start_index + 201].solid = false;
-         TILES[start_index + 241].solid = false;
-         TILES[start_index + 281].solid = false;
-         TILES[start_index + 321].solid = false;
+         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
+         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
+         resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
+         resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
       } else if direction == 4 {
-         let start_index = (((current_row * 400) + current_col * 10) + 360) transmute usize;
-         TILES[start_index + 1].solid = false;
-         TILES[start_index + 2].solid = false;
-         TILES[start_index + 3].solid = false;
-         TILES[start_index + 4].solid = false;
-         TILES[start_index + 5].solid = false;
-         TILES[start_index + 6].solid = false;
-         TILES[start_index + 7].solid = false;
-         TILES[start_index + 8].solid = false;
-         TILES[start_index + 41].solid = false;
-         TILES[start_index + 42].solid = false;
-         TILES[start_index + 43].solid = false;
-         TILES[start_index + 44].solid = false;
-         TILES[start_index + 45].solid = false;
-         TILES[start_index + 46].solid = false;
-         TILES[start_index + 47].solid = false;
-         TILES[start_index + 48].solid = false;
+         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
+         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
+         resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
+         resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
+         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | DOWN_EXIT;
+         resulting_types[resulting_cell] = resulting_types[resulting_cell] | UP_EXIT;
       }
 
       current_cell = current_cell + direction;
+   }
+
+   let max: usize = 16;
+   for cell_i in 0..max {
+      let current_row = cell_i / 4;
+      let current_col = cell_i % 4;
+      let cell_flags = resulting_types[cell_i];
+      let is_hallway = (((cell_flags & LEFT_EXIT) > 0) & ((cell_flags & RIGHT_EXIT) > 0));
+      let is_landing = is_hallway & ((cell_flags & UP_EXIT) > 0);
+      let is_drop = is_hallway & ((cell_flags & DOWN_EXIT) > 0);
+
+      let map = DROP_ROOMS[0];
+      if is_drop {
+         map = DROP_ROOMS[0];
+      } else if is_landing {
+         let landing_map = rand_range(0, 1);
+         map = LANDING_ROOMS[landing_map truncate usize];
+      } else if is_hallway {
+         map = HALLWAY_ROOMS[0];
+      } else {
+         map = BONUS_ROOMS[0];
+      }
+
+      let start_index = ((current_row * 400) + current_col * 10) transmute usize;
+      TILES[start_index] = map[0];
+      TILES[start_index + 1] = map[1];
+      TILES[start_index + 2] = map[2];
+      TILES[start_index + 3] = map[3];
+      TILES[start_index + 4] = map[4];
+      TILES[start_index + 5] = map[5];
+      TILES[start_index + 6] = map[6];
+      TILES[start_index + 7] = map[7];
+      TILES[start_index + 8] = map[8];
+      TILES[start_index + 9] = map[9];
+      TILES[start_index + 40] = map[10];
+      TILES[start_index + 41] = map[11];
+      TILES[start_index + 42] = map[12];
+      TILES[start_index + 43] = map[13];
+      TILES[start_index + 44] = map[14];
+      TILES[start_index + 45] = map[15];
+      TILES[start_index + 46] = map[16];
+      TILES[start_index + 47] = map[17];
+      TILES[start_index + 48] = map[18];
+      TILES[start_index + 49] = map[19];
+      TILES[start_index + 80] = map[20];
+      TILES[start_index + 81] = map[21];
+      TILES[start_index + 82] = map[22];
+      TILES[start_index + 83] = map[23];
+      TILES[start_index + 84] = map[24];
+      TILES[start_index + 85] = map[25];
+      TILES[start_index + 86] = map[26];
+      TILES[start_index + 87] = map[27];
+      TILES[start_index + 88] = map[28];
+      TILES[start_index + 89] = map[29];
+      TILES[start_index + 120] = map[30];
+      TILES[start_index + 121] = map[31];
+      TILES[start_index + 122] = map[32];
+      TILES[start_index + 123] = map[33];
+      TILES[start_index + 124] = map[34];
+      TILES[start_index + 125] = map[35];
+      TILES[start_index + 126] = map[36];
+      TILES[start_index + 127] = map[37];
+      TILES[start_index + 128] = map[38];
+      TILES[start_index + 129] = map[39];
+      TILES[start_index + 160] = map[40];
+      TILES[start_index + 161] = map[41];
+      TILES[start_index + 162] = map[42];
+      TILES[start_index + 163] = map[43];
+      TILES[start_index + 164] = map[44];
+      TILES[start_index + 165] = map[45];
+      TILES[start_index + 166] = map[46];
+      TILES[start_index + 167] = map[47];
+      TILES[start_index + 168] = map[48];
+      TILES[start_index + 169] = map[49];
+      TILES[start_index + 200] = map[50];
+      TILES[start_index + 201] = map[51];
+      TILES[start_index + 202] = map[52];
+      TILES[start_index + 203] = map[53];
+      TILES[start_index + 204] = map[54];
+      TILES[start_index + 205] = map[55];
+      TILES[start_index + 206] = map[56];
+      TILES[start_index + 207] = map[57];
+      TILES[start_index + 208] = map[58];
+      TILES[start_index + 209] = map[59];
+      TILES[start_index + 240] = map[60];
+      TILES[start_index + 241] = map[61];
+      TILES[start_index + 242] = map[62];
+      TILES[start_index + 243] = map[63];
+      TILES[start_index + 244] = map[64];
+      TILES[start_index + 245] = map[65];
+      TILES[start_index + 246] = map[66];
+      TILES[start_index + 247] = map[67];
+      TILES[start_index + 248] = map[68];
+      TILES[start_index + 249] = map[69];
+      TILES[start_index + 280] = map[70];
+      TILES[start_index + 281] = map[71];
+      TILES[start_index + 282] = map[72];
+      TILES[start_index + 283] = map[73];
+      TILES[start_index + 284] = map[74];
+      TILES[start_index + 285] = map[75];
+      TILES[start_index + 286] = map[76];
+      TILES[start_index + 287] = map[77];
+      TILES[start_index + 288] = map[78];
+      TILES[start_index + 289] = map[79];
+      TILES[start_index + 320] = map[80];
+      TILES[start_index + 321] = map[81];
+      TILES[start_index + 322] = map[82];
+      TILES[start_index + 323] = map[83];
+      TILES[start_index + 324] = map[84];
+      TILES[start_index + 325] = map[85];
+      TILES[start_index + 326] = map[86];
+      TILES[start_index + 327] = map[87];
+      TILES[start_index + 328] = map[88];
+      TILES[start_index + 329] = map[89];
+      TILES[start_index + 360] = map[90];
+      TILES[start_index + 361] = map[91];
+      TILES[start_index + 362] = map[92];
+      TILES[start_index + 363] = map[93];
+      TILES[start_index + 364] = map[94];
+      TILES[start_index + 365] = map[95];
+      TILES[start_index + 366] = map[96];
+      TILES[start_index + 367] = map[97];
+      TILES[start_index + 368] = map[98];
+      TILES[start_index + 369] = map[99];
    }
 }
 
 proc start() {
    *PALETTE = [16774867, 16361589, 15428463, 8142680];
    RNG = 2;
+   make_maps();
    reset_game();
 }
 
@@ -229,7 +442,7 @@ proc sim(dt: f64) {
       offset = 16.0;
    } else if go_right {
       PLAYER_POSITION.x = PLAYER_POSITION.x + (1.0 * dt);
-      offset = -10.0;
+      offset = -16.0;
    }
 
    let len: usize = 1600;
@@ -240,7 +453,7 @@ proc sim(dt: f64) {
 
       let x = ((i % 40) * 16) truncate f64;
       let y = ((i / 40) * 16) truncate f64;
-      if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, 10.0, 32.0, x, y, 16.0, 16.0) {
+      if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, 16.0, 16.0, x, y, 16.0, 16.0) {
          PLAYER_POSITION.x = x + offset;
       }
    }
@@ -265,8 +478,8 @@ proc sim(dt: f64) {
 
             let x = ((i % 40) * 16) truncate f64;
             let y = ((i / 40) * 16) truncate f64;
-            if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, 10.0, 32.0, x, y, 16.0, 16.0) {
-               PLAYER_POSITION.y = y - 32.0;
+            if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, 16.0, 16.0, x, y, 16.0, 16.0) {
+               PLAYER_POSITION.y = y - 16.0;
                JUMP_STATE = JumpState::Standing;
             }
          }
@@ -279,7 +492,7 @@ proc sim(dt: f64) {
 
             let x = ((i % 40) * 16) truncate f64;
             let y = ((i / 40) * 16) truncate f64;
-            if !rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y - 1.0, 10.0, 32.0, x, y, 16.0, 16.0) {
+            if !rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y - 1.0, 16.0, 16.0, x, y, 16.0, 16.0) {
                JUMP_SPEED = 0.0;
                JUMP_STATE = JumpState::Falling;
             }
@@ -298,32 +511,36 @@ proc update() {
       reset_game();
    }
 
-   //sim(0.1666);
-   //sim(0.1666);
-   //sim(0.1666);
-   sim(1.0);
-   //sim(0.3333);
-   //sim(0.3333);
+   sim(0.3333);
+   sim(0.3333);
+   sim(0.3333);
 
    // Draw world
    {
       // Always keep camera centered
+      let center_of_player = PLAYER_POSITION;
+      center_of_player.x = center_of_player.x + 5.0;
+      center_of_player.y = center_of_player.y + 8.0;
       let clens: usize = 16;
       let closest_cam: usize = 0;
-      let min_dist: f64 = dist(PLAYER_POSITION, CAMERAS[0]);
+      let min_dist: f64 = dist(center_of_player, CAMERAS[0]);
       for x in 1..clens {
-         let dist = dist(PLAYER_POSITION, CAMERAS[x]);
+         let dist = dist(center_of_player, CAMERAS[x]);
          if dist < min_dist {
             min_dist = dist;
             closest_cam = x;
          }
       }
 
-      let camera_offset_x: f64 = (CAMERAS[closest_cam].x) - 80.0;
-      let camera_offset_y: f64 = (CAMERAS[closest_cam].y) - 80.0;
+      let camera_position = CAMERAS[closest_cam];
+      camera_position.x = PLAYER_POSITION.x + 5.0;
+      camera_position.y = PLAYER_POSITION.y + 8.0;
+
+      let camera_offset_x: f64 = (camera_position.x) - 80.0;
+      let camera_offset_y: f64 = (camera_position.y) - 80.0;
 
       // Draw player
-      rect((PLAYER_POSITION.x - camera_offset_x) truncate i32, (PLAYER_POSITION.y - camera_offset_y) truncate i32, 10, 32);
+      rect((PLAYER_POSITION.x - camera_offset_x) truncate i32, (PLAYER_POSITION.y - camera_offset_y) truncate i32, 16, 16);
 
       let len: usize = 1600;
       for i in 0..len {

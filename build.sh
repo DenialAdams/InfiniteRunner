@@ -1,1 +1,1 @@
-rolandc endless-runner.rol --wasm4
+rolandc diviner.rol --wasm4
