@@ -621,11 +621,11 @@ static PLAYER_SPRITESHEET: [u8; 1710] = [ 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0
 proc draw_player(player_x: i32, player_y: i32) {
    let tmp: u16 = *DRAW_COLORS;
    *DRAW_COLORS = 0x2340;
-   
+
    let current_sprite_x: i32 = 0;
    let current_sprite_y: i32 = 0;
-   blit_sub(&PLAYER_SPRITESHEET[0], player_x, player_y, 20, 18, current_sprite_x, current_sprite_y, PLAYER_SPRITESHEET_WIDTH, PLAYER_SPREADSHEET_FLAGS);
-   *DRAW_COLORS = tmp;   
+   blit_sub(&PLAYER_SPRITESHEET[0], player_x + 2, player_y - 2, 20, 18, current_sprite_x, current_sprite_y, PLAYER_SPRITESHEET_WIDTH, PLAYER_SPREADSHEET_FLAGS);
+   *DRAW_COLORS = tmp;
 }
 
 // Ghost code
