@@ -476,6 +476,20 @@ proc sim(dt: f64) {
             JUMP_SPEED = 0.0;
             JUMP_STATE = JumpState::Falling;
          }
+
+         for i in 0..len {
+            if !TILES[i].solid {
+               continue;
+            }
+
+            let x = ((i % 40) * 16) truncate f64;
+            let y = ((i / 40) * 16) truncate f64;
+            if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, 16.0, 16.0, x, y, 16.0, 16.0) {
+               PLAYER_POSITION.y = y + 16.0;
+               JUMP_SPEED = 0.0;
+               JUMP_STATE = JumpState::Falling;
+            }
+         }
       } else if JUMP_STATE == JumpState::Falling {
          JUMP_SPEED = JUMP_SPEED + (0.3 * dt);
          PLAYER_POSITION.y = PLAYER_POSITION.y + (JUMP_SPEED * dt);
