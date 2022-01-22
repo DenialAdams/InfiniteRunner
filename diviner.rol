@@ -589,7 +589,7 @@ proc update() {
       let camera_offset_y: f64 = (camera_position.y) - 80.0;
 
       // Draw player
-      draw_player((PLAYER_POSITION.x - camera_offset_x) truncate i32, (PLAYER_POSITION.y - camera_offset_y) truncate i32);
+      draw_player((PLAYER_POSITION.x - camera_offset_x) truncate i32, (PLAYER_POSITION.y - camera_offset_y) truncate i32, JUMP_STATE);
 
       if (GHOST_IS_PRESENT) {
          draw_ghost(camera_offset_x, camera_offset_y);
@@ -622,14 +622,55 @@ proc update() {
    }
 }
 
-proc draw_player(player_x: i32, player_y: i32) {
+// Player animations, and related stuff.
+enum CurrentPlayerAnimationCycle {
+   // TODO: add "player hurt" cycle, etc.
+   Jumping,
+   Standing,
+   Falling, 
+}
+
+static PREVIOUS_JUMP_STATE: JumpState = JumpState::Standing;
+
+static CURRENT_PLAYER_ANIMATION_CYCLE: CurrentPlayerAnimationCycle = CurrentPlayerAnimationCycle::Standing;
+
+struct AnimationCycle {
+   current_animation_index: usize,
+   animation_length: usize,
+}
+
+// let jumping_animation_cycle: AnimationCycle {
+//    current_animation_index: 0;
+//    animation_length: 2;
+// };
+
+const JUMP_SPRITE_X: i32 = 320;
+
+const RUNNING_SPRITE_FIRST_X: i32 = 0;
+
+const FALLING_SPRITE_X: i32 = 340;
+
+proc get_next_animation_x(current_jump_state: JumpState, previous_jump_state: JumpState) -> i32 {
+   // TODO worry about previous jump state.
+   if current_jump_state == JumpState::Jumping {
+      return JUMP_SPRITE_X;
+   }
+   if (current_jump_state == JumpState::Falling) {
+      return FALLING_SPRITE_X;
+   }
+   // TOD0 change to cycle animation.
+   return RUNNING_SPRITE_FIRST_X;
+}
+
+proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
    let tmp: u16 = *DRAW_COLORS;
    *DRAW_COLORS = 0x2340;
 
-   let current_sprite_x: i32 = 0;
    let current_sprite_y: i32 = 0;
-   blit_sub(&PLAYER_SPRITESHEET[0], player_x - 1, player_y - 2, 20, 18, current_sprite_x, current_sprite_y, PLAYER_SPRITESHEET_WIDTH, PLAYER_SPREADSHEET_FLAGS);
-   *DRAW_COLORS = tmp;
+   let current_sprite_x: i32 = get_next_animation_x(jump_state, PREVIOUS_JUMP_STATE);
+   blit_sub(&PLAYER_SPRITESHEET[0], player_x -1 , player_y - 2, 20, 18, current_sprite_x, current_sprite_y, PLAYER_SPRITESHEET_WIDTH, PLAYER_SPREADSHEET_FLAGS);
+   // one array for jumping (8 sprites), one array for running (2 sprites), one array for idle (8 sprites).   
+   *DRAW_COLORS = tmp;  
 }
 
 // Ghost code
