@@ -162,6 +162,8 @@ proc reset_game() {
    PLAYER_POSITION.y = 64.0;
    JUMP_SPEED = 0.0;
    JUMP_STATE = JumpState::Standing;
+   GHOST_IS_PRESENT = false;
+   TIME_ALIVE = 0;
 
    let len: usize = 1600;
    for i in 0..len {
@@ -458,6 +460,13 @@ proc sim(dt: f64) {
       }
    }
 
+   // Check if colliding with ghost
+   if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, 10.0, 32.0, GHOST_POSITION.x, GHOST_POSITION.y, GHOST_WIDTH truncate f64, GHOST_HEIGHT truncate f64) {
+         maybe_play_game_over_noise();
+         GAME_OVER = true;
+         return;
+   }
+
    // Do jumping
    {
       if JUMP_STATE == JumpState::Jumping {
@@ -502,9 +511,7 @@ proc sim(dt: f64) {
 }
 
 proc update() {
-   if GAME_OVER {
-      TIME_DEAD = TIME_DEAD + 1;
-   }
+   update_timers();
 
    let reset_pressed = ((*GAMEPADS)[0] & BUTTON_2) > 0;
    if reset_pressed {
@@ -514,6 +521,19 @@ proc update() {
    sim(0.3333);
    sim(0.3333);
    sim(0.3333);
+
+   if GAME_OVER {
+      game_over();
+   }
+
+   {
+      if (!GHOST_IS_PRESENT) {
+         maybe_spawn_ghost();
+      }
+      move_ghost();
+   }
+   //sim(0.3333);
+   //sim(0.3333);
 
    // Draw world
    {
@@ -541,6 +561,9 @@ proc update() {
 
       // Draw player
       rect((PLAYER_POSITION.x - camera_offset_x) truncate i32, (PLAYER_POSITION.y - camera_offset_y) truncate i32, 16, 16);
+      if (GHOST_IS_PRESENT) {
+         draw_ghost(camera_offset_x, camera_offset_y);
+      }
 
       let len: usize = 1600;
       for i in 0..len {
@@ -559,5 +582,73 @@ proc update() {
    {
       //text("SCORE: ", 2, 2);
       //text(int_to_string((PLAYER_POSITION.x / 10.0) truncate u32, &SCORE_BUF), 47, 2);
+   }
+}
+
+
+// Ghost code
+static TIME_ALIVE: u64;
+
+const GHOST_SPAWN_TIME: u64 = 60*5; // 5 seconds timer for ghost. TODO update.
+static GHOST_IS_PRESENT: bool;
+static GHOST_POSITION: Position;
+const GHOST_HEIGHT: u32 = 30;
+const GHOST_WIDTH: u32 = 30;
+const GHOST_SPEED: u64 = 1;
+const DEFAULT_VOLUME: u32 = 50;
+
+
+proc update_timers() {
+   if GAME_OVER {
+      TIME_DEAD = TIME_DEAD + 1;
+   } else {
+      TIME_ALIVE = TIME_ALIVE + 1;
+   }
+}
+
+proc maybe_spawn_ghost() {
+   if (TIME_ALIVE > GHOST_SPAWN_TIME) {
+      GHOST_IS_PRESENT = true;
+      // TODO: spawn in opposite corner of player, instead of top left.
+      GHOST_POSITION.x = 0.0;
+      GHOST_POSITION.y = 0.0;
+   }
+}
+
+// Caller should check if GHOST_IS_PRESENT before moving.
+proc move_ghost() {
+   // if player x > ghost x, ghost x++
+   // if player x < ghost x, ghost x--
+   if (PLAYER_POSITION.x >= GHOST_POSITION.x) {
+      GHOST_POSITION.x = GHOST_POSITION.x+1.0;
+   }
+   else {
+      GHOST_POSITION.x = GHOST_POSITION.x-1.0;
+   }
+   if (PLAYER_POSITION.y >= GHOST_POSITION.y) {
+      GHOST_POSITION.y = GHOST_POSITION.y+1.0;
+   }
+   else {
+      GHOST_POSITION.y = GHOST_POSITION.y-1.0;
+   }
+}
+
+// TODO: add some other color to the ghost to make it stand out.
+proc draw_ghost(camera_offset_x: f64, camera_offset_y: f64) {
+   rect((GHOST_POSITION.x - camera_offset_x) truncate i32, (GHOST_POSITION.y - camera_offset_y) truncate i32, GHOST_WIDTH, GHOST_HEIGHT);
+}
+
+proc game_over() {
+   let tmp = *DRAW_COLORS;
+   *DRAW_COLORS = 0b0010000101000011; // use the 3rd palette color as the first draw color, etc. 0b0010_0001_0100_0011
+   text("YOU LOST :(", 5, 30);
+   *DRAW_COLORS = tmp;
+}
+
+proc maybe_play_game_over_noise() {
+   if (!GAME_OVER) {
+     let starting_freq: u32 = 590;
+     let ending_freq: u32 = 110;
+     tone(starting_freq| (ending_freq << 16), 60, DEFAULT_VOLUME, TONE_PULSE1 | TONE_MODE3);
    }
 }
