@@ -2,6 +2,8 @@ static GAME_OVER: bool;
 static PLAYER_POSITION: Position;
 const PLAYER_WIDTH: f64 = 16.0;
 const PLAYER_HEIGHT: f64 = 16.0;
+static PLAYER_FACING_LEFT: bool;
+static PLAYER_MOVED_ON_LAST_FRAME: bool;
 const TILE_WIDTH: f64 = 16.0;
 const TILE_HEIGHT: f64 = 16.0;
 static JUMP_SPEED: f64;
@@ -14,6 +16,7 @@ static HALLWAY_ROOMS: [[Tile; 100]; 2];
 static LANDING_ROOMS: [[Tile; 100]; 2];
 static DROP_ROOMS: [[Tile; 100]; 1];
 static BONUS_ROOMS: [[Tile; 100]; 1];
+
 
 static TILES: [Tile; 1600];
 
@@ -449,11 +452,18 @@ proc sim(dt: f64) {
 
    let offset: f64 = 0.0;
    if go_left {
-      PLAYER_POSITION.x = PLAYER_POSITION.x - (1.2 * dt);
+      PLAYER_POSITION.x = PLAYER_POSITION.x - (2.0 * dt);
       offset = TILE_WIDTH;
+      PLAYER_FACING_LEFT = true;
+      PLAYER_MOVED_ON_LAST_FRAME = true;
    } else if go_right {
-      PLAYER_POSITION.x = PLAYER_POSITION.x + (1.2 * dt);
+      PLAYER_POSITION.x = PLAYER_POSITION.x + (2.0 * dt);
       offset = TILE_WIDTH*-1.0;
+      PLAYER_FACING_LEFT = false;
+      PLAYER_MOVED_ON_LAST_FRAME = true;
+   }
+   else {
+      PLAYER_MOVED_ON_LAST_FRAME = false;
    }
 
    let len: usize = 1600;
@@ -608,6 +618,7 @@ proc update() {
             blit_sub(&SPIKES[0], (x - camera_offset_x) truncate i32, (y - camera_offset_y) truncate i32, 16, 16, 0, 0, SPIKES_WIDTH, SPIKES_FLAGS);
          }
       }
+      FRAME_COUNT = FRAME_COUNT+1;
    }
 
    //trace(int_to_string(PLAYER_POSITION.y truncate u32, &SCORE_BUF));
@@ -624,7 +635,7 @@ proc update() {
 
 // Player animations, and related stuff.
 enum CurrentPlayerAnimationCycle {
-   // TODO: add "player hurt" cycle, etc.
+   // TODO: add "player hurt" cycle, "player death" cycle etc.
    Jumping,
    Standing,
    Falling, 
@@ -635,22 +646,50 @@ static PREVIOUS_JUMP_STATE: JumpState = JumpState::Standing;
 static CURRENT_PLAYER_ANIMATION_CYCLE: CurrentPlayerAnimationCycle = CurrentPlayerAnimationCycle::Standing;
 
 struct AnimationCycle {
-   current_animation_index: usize,
-   animation_length: usize,
+   current_time_in_animation_seconds: f64,
+   animation_length_seconds: f64, // 4.0 = animation loops over 4 seconds, etc.
+   animation_sprites: i32,
+   starting_animation_x: i32,
+   offset_between_sprites: i32,
 }
 
-// let jumping_animation_cycle: AnimationCycle {
-//    current_animation_index: 0;
-//    animation_length: 2;
-// };
+static RUNNING_CYCLE : AnimationCycle = AnimationCycle {
+   current_time_in_animation_seconds: 0.0,
+   animation_length_seconds: 1.0,
+   animation_sprites: 8,
+   starting_animation_x: 160,
+   offset_between_sprites: 20,
+};
+
+static IDLE_CYCLE : AnimationCycle = AnimationCycle {
+   current_time_in_animation_seconds: 0.0,
+   animation_length_seconds: 1.0,
+   animation_sprites: 8,
+   starting_animation_x: 0,
+   offset_between_sprites: 20,
+};
 
 const JUMP_SPRITE_X: i32 = 320;
-
-const RUNNING_SPRITE_FIRST_X: i32 = 0;
-
 const FALLING_SPRITE_X: i32 = 340;
 
-proc get_next_animation_x(current_jump_state: JumpState, previous_jump_state: JumpState) -> i32 {
+// Frames since the game has begun. Game runs at 60 fps.
+static FRAME_COUNT:u32 = 0;
+
+proc advance_animation_and_return_x(anim_cycle: AnimationCycle, seconds_to_advance: f64) -> i32 {
+   anim_cycle.current_time_in_animation_seconds = anim_cycle.current_time_in_animation_seconds + seconds_to_advance;
+   if (anim_cycle.current_time_in_animation_seconds >= anim_cycle.animation_length_seconds) {
+      anim_cycle.current_time_in_animation_seconds = 0.0;
+   }
+   // Calculate the location of the correct sprite.
+   let sprite_index = ((anim_cycle.current_time_in_animation_seconds/anim_cycle.animation_length_seconds) * anim_cycle.animation_sprites truncate f64) truncate i32;
+   let x = anim_cycle.starting_animation_x + anim_cycle.offset_between_sprites*sprite_index;
+   return x;
+}
+
+// Returns the x value in the PLAYER_SPRITESHEET of the next sprite for the player.
+//
+// Note this advances the current animation to the next frame and therefore should only be called once per draw loop.
+proc get_next_player_sprite_x(current_jump_state: JumpState, previous_jump_state: JumpState) -> i32 {
    // TODO worry about previous jump state.
    if current_jump_state == JumpState::Jumping {
       return JUMP_SPRITE_X;
@@ -658,8 +697,19 @@ proc get_next_animation_x(current_jump_state: JumpState, previous_jump_state: Ju
    if (current_jump_state == JumpState::Falling) {
       return FALLING_SPRITE_X;
    }
-   // TOD0 change to cycle animation.
-   return RUNNING_SPRITE_FIRST_X;
+   if (PLAYER_MOVED_ON_LAST_FRAME) {
+      return advance_animation_and_return_x(RUNNING_CYCLE, (1.0/60.0));
+   }
+   return advance_animation_and_return_x(IDLE_CYCLE, (1.0/60.0));
+   //    RUNNING_CYCLE.current_time_in_animation_seconds = RUNNING_CYCLE.current_time_in_animation_seconds + (1.0/60.0);
+   //    if (RUNNING_CYCLE.current_time_in_animation_seconds >= RUNNING_CYCLE.animation_length_seconds) {
+   //       RUNNING_CYCLE.current_time_in_animation_seconds = 0.0;
+   //    }
+   //    // Calculate the location of the correct sprite.
+   //    let sprite_index = ((RUNNING_CYCLE.current_time_in_animation_seconds/RUNNING_CYCLE.animation_length_seconds) * RUNNING_CYCLE.animation_sprites truncate f64) truncate i32;
+   //    let x = RUNNING_CYCLE.starting_animation_x + RUNNING_CYCLE.offset_between_sprites*sprite_index;
+   //    return x;
+   // }
 }
 
 proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
@@ -667,7 +717,7 @@ proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
    *DRAW_COLORS = 0x2340;
 
    let current_sprite_y: i32 = 0;
-   let current_sprite_x: i32 = get_next_animation_x(jump_state, PREVIOUS_JUMP_STATE);
+   let current_sprite_x: i32 = get_next_player_sprite_x(jump_state, PREVIOUS_JUMP_STATE);
    blit_sub(&PLAYER_SPRITESHEET[0], player_x -1 , player_y - 2, 20, 18, current_sprite_x, current_sprite_y, PLAYER_SPRITESHEET_WIDTH, PLAYER_SPREADSHEET_FLAGS);
    // one array for jumping (8 sprites), one array for running (2 sprites), one array for idle (8 sprites).   
    *DRAW_COLORS = tmp;  
