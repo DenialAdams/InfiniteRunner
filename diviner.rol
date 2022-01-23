@@ -750,8 +750,12 @@ proc update() {
 
    // Draw UI
    {
-      //text("SCORE: ", 2, 2);
-      //text(int_to_string((PLAYER_POSITION.x / 10.0) truncate u32, &SCORE_BUF), 47, 2);
+      let tmp: u16 = *DRAW_COLORS;
+      // use black (color 1) as text color, and white (color 4) as the background.
+      *DRAW_COLORS = 0x2341;
+      text("SCORE: ", 2, 2);
+      text(int_to_string((SCORE) extend u32, &SCORE_BUF), 47, 2);
+      *DRAW_COLORS = tmp;
       if GAME_OVER {
          game_over();
       }
