@@ -19,7 +19,7 @@ static HALLWAY_ROOMS: [[Tile; 100]; 5];
 // Guaranteed to have top entry and left-right exit.
 static LANDING_ROOMS: [[Tile; 100]; 5];
 // Guaranteed to have a downward exit and left-right exit.
-static DROP_ROOMS: [[Tile; 100]; 5];
+static DROP_ROOMS: [[Tile; 100]; 7];
 // No guarantees on exit.
 static BONUS_ROOMS: [[Tile; 100]; 1];
 
@@ -161,12 +161,42 @@ proc make_maps() {
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      o,o,o,o,s,s,o,o,o,o,
+      o,o,w,o,w,w,o,w,o,o,
       o,o,o,o,o,o,o,o,o,o,
-      o,o,o,o,c,c,o,o,o,o,
-      o,o,o,o,w,w,o,o,o,o,
-      o,o,o,o,c,c,o,o,o,o,
       o,w,o,o,o,o,o,o,w,o,
       w,w,s,o,o,o,o,s,w,w,
+   ];
+
+   
+   DROP_ROOMS[5] =
+   [
+      o,o,o,o,o,o,o,o,o,o,
+      w,o,o,o,o,o,o,o,o,w,
+      w,w,o,o,o,o,o,o,w,w,
+      w,w,o,o,o,o,o,o,w,w,
+      w,w,o,o,o,o,o,o,w,w,
+      w,w,o,o,o,o,o,o,w,w,
+      w,w,o,o,o,o,o,o,w,w,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      w,w,w,w,o,o,w,w,w,w,
+   ];
+
+   
+   DROP_ROOMS[6] =
+   [
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,c,o,o,o,o,c,o,o,
+      o,o,w,o,o,o,o,w,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      w,o,o,w,w,w,w,o,o,w,
    ];
 
    HALLWAY_ROOMS[0] =
@@ -211,6 +241,35 @@ proc make_maps() {
       w,w,w,w,w,w,w,w,w,w,
    ];
 
+   HALLWAY_ROOMS[3] =
+   [
+      w,w,w,w,w,w,w,w,w,w,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,c,o,o,o,o,
+      o,c,o,o,o,w,o,o,c,o,
+      o,w,o,s,s,s,s,o,w,o,
+      o,o,o,w,w,w,w,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+
+      HALLWAY_ROOMS[4] =
+   [
+      w,w,w,w,w,w,w,w,w,w,
+      o,w,w,w,w,w,w,w,w,o,
+      o,o,w,w,w,w,w,w,o,o,
+      o,o,o,w,w,w,w,o,o,o,
+      o,o,o,o,w,w,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,c,o,o,c,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,s,s,o,o,s,s,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+   
+
 
    LANDING_ROOMS[0] =
    [
@@ -227,15 +286,57 @@ proc make_maps() {
    ];
    LANDING_ROOMS[1] =
    [
+      w,o,o,o,o,o,o,o,o,w,
+      o,w,o,o,o,o,o,o,w,o,
+      o,w,w,o,o,o,o,w,w,o,
+      o,o,o,w,o,o,w,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,s,s,o,o,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+
+     LANDING_ROOMS[2] =
+   [
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,w,w,w,w,o,o,o,
+      o,c,o,o,o,o,o,o,c,o,
+      o,c,o,o,o,o,o,o,c,o,
+      o,w,o,o,o,o,o,o,w,o,
+      o,o,o,o,w,w,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,s,s,o,o,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+   
+   LANDING_ROOMS[3] =
+   [
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      o,o,o,o,w,w,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      c,o,s,o,o,o,o,s,o,c,
+      w,w,w,w,o,o,w,w,w,w,
+   ];
+
+     LANDING_ROOMS[4] =
+   [
+      w,o,o,o,o,o,o,o,o,o,
+      o,w,o,o,o,o,o,o,o,o,
+      o,o,w,w,o,o,o,o,o,c,
+      o,o,o,o,w,o,o,o,c,w,
+      o,o,o,o,o,w,o,o,w,o,
+      o,o,o,o,o,o,o,w,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
-      o,o,o,o,o,o,o,o,o,o,
-      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,s,s,o,o,
       w,w,w,w,w,w,w,w,w,w,
    ];
 
@@ -386,7 +487,7 @@ proc carve_path() {
 
       let map = DROP_ROOMS[0];
       if is_drop {
-         let drop_map = rand_range(0, 4);
+         let drop_map = rand_range(0, 6);
          map = DROP_ROOMS[drop_map truncate usize];
        } else if is_landing {
          let landing_map = rand_range(0, 4);
@@ -873,7 +974,7 @@ proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
 // Ghost code
 static TIME_ALIVE: u64;
 
-const GHOST_SPAWN_TIME: u64 = 1*120; // Number of frames after which the ghost should spawn.
+const GHOST_SPAWN_TIME: u64 = 3*120; // Number of frames after which the ghost should spawn.
 static GHOST_IS_PRESENT: bool;
 static GHOST_FACING_LEFT: bool;
 static GHOST_POSITION: Position;
