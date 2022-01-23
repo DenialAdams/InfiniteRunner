@@ -390,6 +390,10 @@ proc carve_path() {
          loop {
             let test_tile = rand_range(10, 99) truncate usize;
 
+            if test_tile % 10 == 0 or test_tile % 10 == 9 {
+               continue;
+            }
+
             if map[test_tile] == Tile::Wall and map[test_tile - 10] == Tile::Air {
                start_tile = test_tile - 10;
                break;
@@ -409,6 +413,10 @@ proc carve_path() {
          // stick an exit into the map
          loop {
             let test_tile = rand_range(10, 99) truncate usize;
+
+            if test_tile % 10 == 0 or test_tile % 10 == 9 {
+               continue;
+            }
 
             if map[test_tile] == Tile::Wall and map[test_tile - 10] == Tile::Air {
                map[test_tile - 10] = Tile::Door;
@@ -741,7 +749,7 @@ proc update() {
          }
          else if TILES[i] == Tile::Coin {
             let coin_spritesheet_x = advance_animation_and_return_x(&COIN_CYCLE, (1.0/60.0));
-            blit_sub(&COIN[0], (x - camera_offset_x) truncate i32, (y - camera_offset_y) truncate i32, 16, 16, coin_spritesheet_x, 0, COIN_WIDTH, COIN_FLAGS);            
+            blit_sub(&COIN[0], (x - camera_offset_x) truncate i32, (y - camera_offset_y) truncate i32, 16, 16, coin_spritesheet_x, 0, COIN_WIDTH, COIN_FLAGS);
          }
       }
       FRAME_COUNT = FRAME_COUNT+1;
