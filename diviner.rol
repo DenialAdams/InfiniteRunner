@@ -556,6 +556,17 @@ proc start() {
 }
 
 proc sim(dt: f64) {
+   if GAME_OVER {
+      return;
+   }
+
+   {
+      if (!GHOST_IS_PRESENT) {
+         maybe_spawn_ghost();
+      }
+      move_ghost(dt);
+   }
+
    // Handle input
    let jump_pressed = ((*GAMEPADS)[0] & BUTTON_1) > 0;
    if jump_pressed and JUMP_STATE == JumpState::Standing and !GAME_OVER {
@@ -654,6 +665,10 @@ proc sim(dt: f64) {
             if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, PLAYER_WIDTH, PLAYER_HEIGHT, x, y, TILE_WIDTH, TILE_HEIGHT) {
                if TILES[i] == Tile::Coin {
                   handle_coin_collision(i);
+               } else if TILES[i] == Tile::Spike {
+                  maybe_play_game_over_noise();
+                  GAME_OVER = true;
+                  return;
                } else {
                   PLAYER_POSITION.y = y - TILE_HEIGHT;
                   JUMP_STATE = JumpState::Standing;
@@ -703,17 +718,6 @@ proc update() {
    sim(0.3333);
    sim(0.3333);
    sim(0.3333);
-
-   if GAME_OVER {
-      draw_game_over_text();
-   }
-
-   {
-      if (!GHOST_IS_PRESENT) {
-         maybe_spawn_ghost();
-      }
-      move_ghost();
-   }
 
    // Draw world
    {
@@ -869,7 +873,7 @@ proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
 // Ghost code
 static TIME_ALIVE: u64;
 
-const GHOST_SPAWN_TIME: u64 = 60*120; // Number of frames after which the ghost should spawn.
+const GHOST_SPAWN_TIME: u64 = 1*120; // Number of frames after which the ghost should spawn.
 static GHOST_IS_PRESENT: bool;
 static GHOST_FACING_LEFT: bool;
 static GHOST_POSITION: Position;
@@ -905,22 +909,22 @@ proc maybe_spawn_ghost() {
 }
 
 // Caller should check if GHOST_IS_PRESENT before moving.
-proc move_ghost() {
+proc move_ghost(dt: f64) {
    // if player x > ghost x, ghost x++
    // if player x < ghost x, ghost x--
    if (PLAYER_POSITION.x > GHOST_POSITION.x) {
-      GHOST_POSITION.x = GHOST_POSITION.x+1.0;
+      GHOST_POSITION.x = GHOST_POSITION.x + (1.0 * dt);
       GHOST_FACING_LEFT = false;
    }
    else {
-      GHOST_POSITION.x = GHOST_POSITION.x-1.0;
+      GHOST_POSITION.x = GHOST_POSITION.x - (1.0 * dt);
       GHOST_FACING_LEFT = true;
    }
    if (PLAYER_POSITION.y >= GHOST_POSITION.y) {
-      GHOST_POSITION.y = GHOST_POSITION.y+1.0;
+      GHOST_POSITION.y = GHOST_POSITION.y + (1.0 * dt);
    }
    else {
-      GHOST_POSITION.y = GHOST_POSITION.y-1.0;
+      GHOST_POSITION.y = GHOST_POSITION.y - (1.0 * dt);
    }
 }
 
