@@ -7,6 +7,7 @@ static PLAYER_MOVED_ON_LAST_FRAME: bool;
 const TILE_WIDTH: f64 = 16.0;
 const TILE_HEIGHT: f64 = 16.0;
 static JUMP_SPEED: f64;
+const TERMINAL_VELOCITY: f64 = 3.0;
 static JUMP_STATE: JumpState;
 static RNG: u64 = 0;
 static SCORE_BUF: [u8; 10];
@@ -821,6 +822,10 @@ proc sim(dt: f64) {
          }
       } else if JUMP_STATE == JumpState::Falling {
          JUMP_SPEED = JUMP_SPEED + (0.2 * dt);
+         if (JUMP_SPEED > TERMINAL_VELOCITY) {
+            JUMP_SPEED = TERMINAL_VELOCITY;
+         }
+         
          PLAYER_POSITION.y = PLAYER_POSITION.y + (JUMP_SPEED * dt);
 
          let touched_door: bool = false;
