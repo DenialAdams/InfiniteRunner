@@ -1096,7 +1096,7 @@ proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
 }
 
 
-const GHOST_SPAWN_TIME: u64 = 60*90; // Number of frames after which the ghost should spawn.
+const GHOST_SPAWN_TIME: u64 = 60*25; // Number of frames after which the ghost should spawn.
 static GHOST_IS_PRESENT: bool;
 static GHOST_FACING_LEFT: bool;
 static GHOST_POSITION: Position;
