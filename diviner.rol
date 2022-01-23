@@ -100,6 +100,28 @@ proc rectangles_collide(x1: f64, y1: f64, width1: f64, height1: f64, x2: f64, y2
       (height1 + y1 > y2);
 }
 
+proc segment_v_segment(x1: f64, y1: f64, x2: f64, y2: f64, x3: f64, y3: f64, x4: f64, y4: f64) -> bool {
+   let dx1 = x2 - x1;
+   let dy1 = y2 - y1;
+   let dx2 = x4 - x3;
+   let dy2 = y4 - y3;
+   let dx3 = x1 - x3;
+   let dy3 = y1 - y3;
+   let d = dx1*dy2 - dy1*dx2;
+   if d == 0.0 {
+      return false;
+   }
+   let t1 = (dx2*dy3 - dy2*dx3)/d;
+   if t1 < 0.0 or t1 > 1.0 {
+      return false;
+   }
+   let t2 = (dx1*dy3 - dy1*dx3)/d;
+   if t2 < 0.0 or t2 > 1.0 {
+    return false;
+   }
+   return true;
+}
+
 proc make_maps() {
    let w = Tile::Wall;
    let o = Tile::Air;
@@ -780,6 +802,21 @@ proc sim(dt: f64) {
          } else if TILES[i] == Tile::Door {
             PLAYER_POSITION.x = x + offset;
             handle_door_collision();
+         } else if TILES[i] == Tile::Spike {
+                  let midpoint = x + (TILE_WIDTH / 2.0);
+                  // left edge of player
+                  let fipt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y, PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x, y + TILE_HEIGHT);
+                  let spt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y, PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x + TILE_WIDTH, y + TILE_HEIGHT);
+                  // right edge of player
+                  let tpt = segment_v_segment(PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x, y + TILE_HEIGHT);
+                  let fopt = segment_v_segment(PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x + TILE_WIDTH, y + TILE_HEIGHT);
+                  // bottom of player
+                  let ffpt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x, y + TILE_HEIGHT);
+                  let fifpt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x + TILE_WIDTH, y + TILE_HEIGHT);
+                  let touched_spike = fipt | spt | tpt | fopt | fipt | ffpt;
+                  if touched_spike {
+                     PLAYER_POSITION.x = x + offset;
+                  }
          } else {
             PLAYER_POSITION.x = x + offset;
          }
@@ -805,7 +842,7 @@ proc sim(dt: f64) {
          }
 
          for i in 0..len {
-            if TILES[i] == Tile::Air{
+            if TILES[i] == Tile::Air {
                continue;
             }
 
@@ -814,10 +851,13 @@ proc sim(dt: f64) {
             if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, 16.0, 16.0, x, y, 16.0, 16.0) {
                if TILES[i] == Tile::Coin {
                   handle_coin_collision(i);
+               } else if TILES[i] == Tile::Spike {
+                  // h,,,
+               } else {
+                  PLAYER_POSITION.y = y + 16.0;
+                  JUMP_SPEED = 0.0;
+                  JUMP_STATE = JumpState::Falling;
                }
-               PLAYER_POSITION.y = y + 16.0;
-               JUMP_SPEED = 0.0;
-               JUMP_STATE = JumpState::Falling;
             }
          }
       } else if JUMP_STATE == JumpState::Falling {
@@ -840,15 +880,30 @@ proc sim(dt: f64) {
                if TILES[i] == Tile::Coin {
                   handle_coin_collision(i);
                } else if TILES[i] == Tile::Spike {
-                  touched_spike = true;
+                  let midpoint = x + (TILE_WIDTH / 2.0);
+                  // left edge of player
+                  let fipt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y, PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x, y + TILE_HEIGHT);
+                  let spt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y, PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x + TILE_WIDTH, y + TILE_HEIGHT);
+                  // right edge of player
+                  let tpt = segment_v_segment(PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x, y + TILE_HEIGHT);
+                  let fopt = segment_v_segment(PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x + TILE_WIDTH, y + TILE_HEIGHT);
+                  // bottom of player
+                  let ffpt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x, y + TILE_HEIGHT);
+                  let fifpt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x + TILE_WIDTH, y + TILE_HEIGHT);
+                  touched_spike = fipt | spt | tpt | fopt | fipt | ffpt;
+                  if (!touched_spike) {
+                     trace("close call!");
+                  }
                } else if TILES[i] == Tile::Door {
                   touched_door = true;
                   PLAYER_POSITION.y = y - TILE_HEIGHT;
                   JUMP_STATE = JumpState::Standing;
+                  trace("fell onto door");
                   break;
                } else {
                   PLAYER_POSITION.y = y - TILE_HEIGHT;
                   JUMP_STATE = JumpState::Standing;
+                  trace("fell onto platform");
                }
             }
          }
