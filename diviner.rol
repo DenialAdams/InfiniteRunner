@@ -8,7 +8,7 @@ const TILE_WIDTH: f64 = 16.0;
 const TILE_HEIGHT: f64 = 16.0;
 static JUMP_SPEED: f64;
 static JUMP_STATE: JumpState;
-static RNG: u64;
+static RNG: u64 = 0;
 static SCORE_BUF: [u8; 10];
 static SCORE: u32;
 
@@ -261,7 +261,7 @@ proc make_maps() {
       w,w,w,w,w,w,w,w,w,w,
    ];
 
-      HALLWAY_ROOMS[4] =
+   HALLWAY_ROOMS[4] =
    [
       w,w,w,w,w,w,w,w,w,w,
       o,w,w,w,w,w,w,w,w,o,
@@ -369,6 +369,14 @@ proc reset_game(starting_score: u32) {
    GHOST_IS_PRESENT = false;
    TIME_ALIVE = 0;
    SCORE = starting_score;
+
+   if RNG == 0 {
+      diskr((&RNG) transmute &u8, 8);
+      if RNG == 0 {
+         RNG = 2;
+      }
+   }
+   diskw((&RNG) transmute &u8, 8);
 
    carve_path();
 
@@ -707,7 +715,6 @@ proc start() {
    //         [ black,   grey,    brown,     white  ]
    *PALETTE = [0x211e20, 0x555568,0xa0a08b,0xe9efec];
    *DRAW_COLORS = 0x2340;
-   RNG = 2;
    make_maps();
    reset_game(0);
 }
@@ -817,7 +824,6 @@ proc sim(dt: f64) {
 
          let touched_door: bool = false;
          let touched_spike: bool = false;
-            
          for i in 0..len {
             if TILES[i] == Tile::Air{
                continue;
