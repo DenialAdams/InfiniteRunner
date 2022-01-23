@@ -1182,7 +1182,7 @@ proc draw_game_over_text() {
    let tmp: u16 = *DRAW_COLORS;
    // use black (color 1) as text color, and white (color 4) as the background.
    *DRAW_COLORS = 0x2341;
-   text("YOU DIED :(", 40, 50);
+   text("DEATH", 40, 50);
    *DRAW_COLORS = tmp;
 }
 
