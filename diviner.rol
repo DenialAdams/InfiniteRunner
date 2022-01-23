@@ -12,6 +12,8 @@ static RNG: u64;
 static SCORE_BUF: [u8; 10];
 static TIME_DEAD: u64;
 
+static LAST_GAMEPAD: u8;
+
 static HALLWAY_ROOMS: [[Tile; 100]; 2];
 static LANDING_ROOMS: [[Tile; 100]; 2];
 static DROP_ROOMS: [[Tile; 100]; 1];
@@ -582,7 +584,11 @@ proc sim(dt: f64) {
 proc update() {
    update_timers();
 
-   let reset_pressed = ((*GAMEPADS)[0] & BUTTON_2) > 0;
+   let gamepad = (*GAMEPADS)[0];
+   let pressed_this_frame = gamepad & (gamepad ^ LAST_GAMEPAD);
+   LAST_GAMEPAD = gamepad;
+
+   let reset_pressed = (pressed_this_frame & BUTTON_2) > 0;
    if reset_pressed {
       reset_game();
    }
@@ -820,13 +826,13 @@ proc draw_ghost(camera_offset_x: f64, camera_offset_y: f64) {
    }
    else {
       ghost_left_eye_x =  ghost_left_eye_x + 15;
-      ghost_right_eye_x =  ghost_right_eye_x + 20;    
+      ghost_right_eye_x =  ghost_right_eye_x + 20;
    }
    rect(ghost_right_eye_x, ghost_draw_y+6, 4, 5);
-   rect(ghost_left_eye_x, ghost_draw_y+4, 4, 5); 
+   rect(ghost_left_eye_x, ghost_draw_y+4, 4, 5);
    // draw mouth
    rect(ghost_left_eye_x, ghost_draw_y+12, 12, 10);
-  
+
 }
 
 proc game_over() {
