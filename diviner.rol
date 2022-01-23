@@ -390,8 +390,8 @@ proc carve_path() {
          loop {
             let test_tile = rand_range(10, 99) truncate usize;
 
-            if map[test_tile] == Tile::Wall and map[test_tile - 9] == Tile::Air {
-               start_tile = test_tile - 9;
+            if map[test_tile] == Tile::Wall and map[test_tile - 10] == Tile::Air {
+               start_tile = test_tile - 10;
                break;
             }
          }
@@ -410,8 +410,8 @@ proc carve_path() {
          loop {
             let test_tile = rand_range(10, 99) truncate usize;
 
-            if map[test_tile] == Tile::Wall and map[test_tile - 9] == Tile::Air {
-               map[test_tile - 9] = Tile::Door;
+            if map[test_tile] == Tile::Wall and map[test_tile - 10] == Tile::Air {
+               map[test_tile - 10] = Tile::Door;
                break;
             }
          }
@@ -576,7 +576,11 @@ proc sim(dt: f64) {
       let x = ((i % 40) * 16) truncate f64;
       let y = ((i / 40) * 16) truncate f64;
       if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, PLAYER_WIDTH, PLAYER_HEIGHT, x, y, TILE_WIDTH, TILE_HEIGHT) {
-         PLAYER_POSITION.x = x + offset;
+         if TILES[i] == Tile::Coin {
+            handle_coin_collision(i);
+         } else {
+            PLAYER_POSITION.x = x + offset;
+         }
       }
    }
    if (GHOST_IS_PRESENT) {
@@ -628,27 +632,23 @@ proc sim(dt: f64) {
             if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, PLAYER_WIDTH, PLAYER_HEIGHT, x, y, TILE_WIDTH, TILE_HEIGHT) {
                if TILES[i] == Tile::Coin {
                   handle_coin_collision(i);
+               } else {
+                  PLAYER_POSITION.y = y - TILE_HEIGHT;
+                  JUMP_STATE = JumpState::Standing;
                }
-               PLAYER_POSITION.y = y - TILE_HEIGHT;
-               JUMP_STATE = JumpState::Standing;
             }
          }
       } else if JUMP_STATE == JumpState::Standing {
          let ontop = false;
          for i in 0..len {
-            if TILES[i] == Tile::Air{
+            if TILES[i] == Tile::Air or TILES[i] == Tile::Coin {
                continue;
             }
 
             let x = ((i % 40) * 16) truncate f64;
             let y = ((i / 40) * 16) truncate f64;
             if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y + 0.1, PLAYER_WIDTH, PLAYER_HEIGHT, x, y, TILE_WIDTH, TILE_HEIGHT) {
-               if TILES[i] == Tile::Coin {
-                  handle_coin_collision(i);
-               }
-               else {
-                  ontop = true;
-               }
+               ontop = true;
                break;
             }
          }
