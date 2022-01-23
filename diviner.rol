@@ -891,19 +891,14 @@ proc sim(dt: f64) {
                   let ffpt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x, y + TILE_HEIGHT);
                   let fifpt = segment_v_segment(PLAYER_POSITION.x, PLAYER_POSITION.y + PLAYER_HEIGHT, PLAYER_POSITION.x + PLAYER_WIDTH, PLAYER_POSITION.y + PLAYER_HEIGHT, midpoint, y, x + TILE_WIDTH, y + TILE_HEIGHT);
                   touched_spike = fipt | spt | tpt | fopt | fipt | ffpt;
-                  if (!touched_spike) {
-                     trace("close call!");
-                  }
                } else if TILES[i] == Tile::Door {
                   touched_door = true;
                   PLAYER_POSITION.y = y - TILE_HEIGHT;
                   JUMP_STATE = JumpState::Standing;
-                  trace("fell onto door");
                   break;
                } else {
                   PLAYER_POSITION.y = y - TILE_HEIGHT;
                   JUMP_STATE = JumpState::Standing;
-                  trace("fell onto platform");
                }
             }
          }
