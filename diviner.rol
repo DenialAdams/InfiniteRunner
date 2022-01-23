@@ -361,14 +361,14 @@ proc make_maps() {
    ];
 }
 
-proc reset_game() {
+proc reset_game(starting_score: u32) {
    GAME_OVER = false;
    TIME_DEAD = 0;
    JUMP_SPEED = 0.0;
    JUMP_STATE = JumpState::Standing;
    GHOST_IS_PRESENT = false;
    TIME_ALIVE = 0;
-   SCORE = 0;
+   SCORE = starting_score;
 
    carve_path();
 
@@ -671,7 +671,7 @@ proc start() {
    *DRAW_COLORS = 0x2340;
    RNG = 2;
    make_maps();
-   reset_game();
+   reset_game(0);
 }
 
 proc sim(dt: f64) {
@@ -693,7 +693,7 @@ proc sim(dt: f64) {
       JUMP_SPEED = 9.0;
       tone(300 | (800 << 16), 6, 50, TONE_MODE1);
    } else if (false) and TIME_DEAD >= 5 {
-      reset_game();
+      reset_game(0);
       return;
    }
 
@@ -844,7 +844,7 @@ proc update() {
 
    let reset_pressed = (pressed_this_frame & BUTTON_2) > 0;
    if reset_pressed {
-      reset_game();
+      reset_game(0);
    }
 
    if DOING_DOOR {
@@ -857,7 +857,7 @@ proc update() {
          DOING_DOOR = false;
          TIME_DOING_DOOR = 0;
          *PALETTE = [0x211e20, 0x555568,0xa0a08b,0xe9efec];
-         reset_game();
+         reset_game(SCORE);
          return;
       }
    } else {
@@ -1016,8 +1016,6 @@ proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
    *DRAW_COLORS = tmp;
 }
 
-// Ghost code
-static TIME_ALIVE: u64;
 
 const GHOST_SPAWN_TIME: u64 = 60*90; // Number of frames after which the ghost should spawn.
 static GHOST_IS_PRESENT: bool;
