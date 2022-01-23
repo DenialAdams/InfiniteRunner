@@ -804,7 +804,7 @@ proc sim(dt: f64) {
       } else if JUMP_STATE == JumpState::Standing {
          let ontop = false;
          for i in 0..len {
-            if TILES[i] == Tile::Air or TILES[i] == Tile::Coin {
+            if TILES[i] == Tile::Air or TILES[i] == Tile::Coin or TILES[i] == Tile::Spike or TILES[i] == Tile::Door {
                continue;
             }
 
