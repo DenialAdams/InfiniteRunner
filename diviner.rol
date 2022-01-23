@@ -732,7 +732,7 @@ proc sim(dt: f64) {
             handle_coin_collision(i);
          } else if TILES[i] == Tile::Door {
             PLAYER_POSITION.x = x + offset;
-            handle_door_collision(i);
+            handle_door_collision();
          } else {
             PLAYER_POSITION.x = x + offset;
          }
@@ -777,29 +777,39 @@ proc sim(dt: f64) {
          JUMP_SPEED = JUMP_SPEED + (0.2 * dt);
          PLAYER_POSITION.y = PLAYER_POSITION.y + (JUMP_SPEED * dt);
 
+         let touched_door: bool = false;
+         let touched_spike: bool = false;
+            
          for i in 0..len {
             if TILES[i] == Tile::Air{
                continue;
             }
-
             let x = ((i % 40) * 16) truncate f64;
             let y = ((i / 40) * 16) truncate f64;
             if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, PLAYER_WIDTH, PLAYER_HEIGHT, x, y, TILE_WIDTH, TILE_HEIGHT) {
                if TILES[i] == Tile::Coin {
                   handle_coin_collision(i);
                } else if TILES[i] == Tile::Spike {
-                  maybe_play_game_over_noise();
-                  GAME_OVER = true;
-                  return;
+                  touched_spike = true;
                } else if TILES[i] == Tile::Door {
-                  handle_door_collision(i);
+                  touched_door = true;
                   PLAYER_POSITION.y = y - TILE_HEIGHT;
                   JUMP_STATE = JumpState::Standing;
+                  break;
                } else {
                   PLAYER_POSITION.y = y - TILE_HEIGHT;
                   JUMP_STATE = JumpState::Standing;
                }
             }
+         }
+         if touched_spike and !touched_door {
+            // hit a spike, wasn't touching door. end early.
+            maybe_play_game_over_noise();
+            GAME_OVER = true;
+            return;
+         }
+         if touched_door {
+            handle_door_collision();
          }
       } else if JUMP_STATE == JumpState::Standing {
          let ontop = false;
@@ -829,7 +839,7 @@ proc handle_coin_collision(current_tile_index: usize) {
    TILES[current_tile_index] = Tile::Air;
 }
 
-proc handle_door_collision(current_tile_index: usize) {
+proc handle_door_collision() {
    DOING_DOOR = true;
    tone(90 | (160 << 16), (100 << 24) | (86 << 16) | 10 | (166 << 8), 3, 3 | (0 << 2));
    SCORE = SCORE + 5;
@@ -861,9 +871,16 @@ proc update() {
          return;
       }
    } else {
-      sim(0.3333);
-      sim(0.3333);
-      sim(0.3333);
+      sim(0.1);
+      sim(0.1);
+      sim(0.1);
+      sim(0.1);
+      sim(0.1);
+      sim(0.1);
+      sim(0.1);
+      sim(0.1);
+      sim(0.1);
+      sim(0.1);
    }
 
    // Draw world
