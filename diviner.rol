@@ -10,8 +10,14 @@ static JUMP_SPEED: f64;
 static JUMP_STATE: JumpState;
 static RNG: u64;
 static SCORE_BUF: [u8; 10];
+static SCORE: u32;
+
+static DOING_DOOR: bool = false;
+
+// Timers
+static TIME_ALIVE: u64;
 static TIME_DEAD: u64;
-static SCORE: u8;
+static TIME_DOING_DOOR: u64;
 
 static LAST_GAMEPAD: u8;
 // Guaranteed to have left-right exits.
@@ -169,7 +175,7 @@ proc make_maps() {
       w,w,s,o,o,o,o,s,w,w,
    ];
 
-   
+
    DROP_ROOMS[5] =
    [
       o,o,o,o,o,o,o,o,o,o,
@@ -184,7 +190,7 @@ proc make_maps() {
       w,w,w,w,o,o,w,w,w,w,
    ];
 
-   
+
    DROP_ROOMS[6] =
    [
       o,o,o,o,o,o,o,o,o,o,
@@ -268,7 +274,7 @@ proc make_maps() {
       o,o,s,s,o,o,s,s,o,o,
       w,w,w,w,w,w,w,w,w,w,
    ];
-   
+
 
 
    LANDING_ROOMS[0] =
@@ -311,7 +317,7 @@ proc make_maps() {
       o,o,o,o,s,s,o,o,o,o,
       w,w,w,w,w,w,w,w,w,w,
    ];
-   
+
    LANDING_ROOMS[3] =
    [
       o,o,o,o,o,o,o,o,o,o,
@@ -647,6 +653,18 @@ proc carve_path() {
    }
 }
 
+proc shade(rgb: u32, shade_factor: f64) -> u32 {
+   let b = ((rgb & 0x0000FF) truncate f64) / 255.0;
+   let g = (((rgb & 0x00FF00) >> 8) truncate f64) / 255.0;
+   let r = (((rgb & 0xFF0000) >> 16) truncate f64) / 255.0;
+
+   let new_r = ((r * (1.0 - shade_factor)) * 255.0) truncate u32;
+   let new_g = ((g * (1.0 - shade_factor)) * 255.0) truncate u32;
+   let new_b = ((b * (1.0 - shade_factor)) * 255.0) truncate u32;
+
+   return (new_r << 16) | (new_b << 8) | new_g;
+}
+
 proc start() {
    //         [ black,   grey,    brown,     white  ]
    *PALETTE = [0x211e20, 0x555568,0xa0a08b,0xe9efec];
@@ -657,7 +675,7 @@ proc start() {
 }
 
 proc sim(dt: f64) {
-   if GAME_OVER {
+   if GAME_OVER | DOING_DOOR {
       return;
    }
 
@@ -670,7 +688,7 @@ proc sim(dt: f64) {
 
    // Handle input
    let jump_pressed = ((*GAMEPADS)[0] & BUTTON_1) > 0;
-   if jump_pressed and JUMP_STATE == JumpState::Standing and !GAME_OVER {
+   if jump_pressed and JUMP_STATE == JumpState::Standing {
       JUMP_STATE = JumpState::Jumping;
       JUMP_SPEED = 9.0;
       tone(300 | (800 << 16), 6, 50, TONE_MODE1);
@@ -712,6 +730,9 @@ proc sim(dt: f64) {
       if rectangles_collide(PLAYER_POSITION.x, PLAYER_POSITION.y, PLAYER_WIDTH, PLAYER_HEIGHT, x, y, TILE_WIDTH, TILE_HEIGHT) {
          if TILES[i] == Tile::Coin {
             handle_coin_collision(i);
+         } else if TILES[i] == Tile::Door {
+            PLAYER_POSITION.x = x + offset;
+            handle_door_collision(i);
          } else {
             PLAYER_POSITION.x = x + offset;
          }
@@ -770,6 +791,10 @@ proc sim(dt: f64) {
                   maybe_play_game_over_noise();
                   GAME_OVER = true;
                   return;
+               } else if TILES[i] == Tile::Door {
+                  handle_door_collision(i);
+                  PLAYER_POSITION.y = y - TILE_HEIGHT;
+                  JUMP_STATE = JumpState::Standing;
                } else {
                   PLAYER_POSITION.y = y - TILE_HEIGHT;
                   JUMP_STATE = JumpState::Standing;
@@ -779,7 +804,7 @@ proc sim(dt: f64) {
       } else if JUMP_STATE == JumpState::Standing {
          let ontop = false;
          for i in 0..len {
-            if TILES[i] == Tile::Air or TILES[i] == Tile::Coin {
+            if TILES[i] == Tile::Air or TILES[i] == Tile::Coin or TILES[i] == Tile::Spike or TILES[i] == Tile::Door {
                continue;
             }
 
@@ -804,6 +829,12 @@ proc handle_coin_collision(current_tile_index: usize) {
    TILES[current_tile_index] = Tile::Air;
 }
 
+proc handle_door_collision(current_tile_index: usize) {
+   DOING_DOOR = true;
+   tone(90 | (160 << 16), (100 << 24) | (86 << 16) | 10 | (166 << 8), 3, 3 | (0 << 2));
+   SCORE = SCORE + 5;
+}
+
 proc update() {
    update_timers();
 
@@ -816,9 +847,24 @@ proc update() {
       reset_game();
    }
 
-   sim(0.3333);
-   sim(0.3333);
-   sim(0.3333);
+   if DOING_DOOR {
+      (*PALETTE)[0] = shade((*PALETTE)[0], 0.01);
+      (*PALETTE)[1] = shade((*PALETTE)[1], 0.01);
+      (*PALETTE)[2] = shade((*PALETTE)[2], 0.01);
+      (*PALETTE)[3] = shade((*PALETTE)[3], 0.01);
+
+      if TIME_DOING_DOOR > 150 {
+         DOING_DOOR = false;
+         TIME_DOING_DOOR = 0;
+         *PALETTE = [0x211e20, 0x555568,0xa0a08b,0xe9efec];
+         reset_game();
+         return;
+      }
+   } else {
+      sim(0.3333);
+      sim(0.3333);
+      sim(0.3333);
+   }
 
    // Draw world
    {
@@ -865,8 +911,7 @@ proc update() {
             blit_sub(&SPIKES[0], (x - camera_offset_x) truncate i32, (y - camera_offset_y) truncate i32, 16, 16, 0, 0, SPIKES_WIDTH, SPIKES_FLAGS);
          } else if TILES[i] == Tile::Door{
             blit_sub(&DOOR[0], (x - camera_offset_x) truncate i32, (y - camera_offset_y) truncate i32, 16, 16, 0, 0, DOOR_WIDTH, DOOR_FLAGS);
-         }
-         else if TILES[i] == Tile::Coin {
+         } else if TILES[i] == Tile::Coin {
             let coin_spritesheet_x = advance_animation_and_return_x(&COIN_CYCLE, (1.0/60.0));
             blit_sub(&COIN[0], (x - camera_offset_x) truncate i32, (y - camera_offset_y) truncate i32, 16, 16, coin_spritesheet_x, 0, COIN_WIDTH, COIN_FLAGS);
          }
@@ -882,7 +927,7 @@ proc update() {
       // use black (color 1) as text color, and white (color 4) as the background.
       *DRAW_COLORS = 0x2341;
       text("SCORE: ", 2, 2);
-      text(int_to_string((SCORE) extend u32, &SCORE_BUF), 47, 2);
+      text(int_to_string(SCORE, &SCORE_BUF), 47, 2);
       *DRAW_COLORS = tmp;
       if GAME_OVER {
          draw_game_over_text();
@@ -974,7 +1019,7 @@ proc draw_player(player_x: i32, player_y: i32, jump_state: JumpState) {
 // Ghost code
 static TIME_ALIVE: u64;
 
-const GHOST_SPAWN_TIME: u64 = 60*120; // Number of frames after which the ghost should spawn.
+const GHOST_SPAWN_TIME: u64 = 60*90; // Number of frames after which the ghost should spawn.
 static GHOST_IS_PRESENT: bool;
 static GHOST_FACING_LEFT: bool;
 static GHOST_POSITION: Position;
@@ -989,6 +1034,9 @@ proc update_timers() {
       TIME_DEAD = TIME_DEAD + 1;
    } else {
       TIME_ALIVE = TIME_ALIVE + 1;
+      if DOING_DOOR {
+         TIME_DOING_DOOR = TIME_DOING_DOOR + 1;
+      }
    }
 }
 
@@ -1039,18 +1087,17 @@ proc draw_ghost(camera_offset_x: f64, camera_offset_y: f64) {
 
    let ghost_left_eye_x = ghost_draw_x;
    let ghost_right_eye_x = ghost_draw_x;
-   if (GHOST_FACING_LEFT) {
+   if GHOST_FACING_LEFT {
       ghost_left_eye_x =  ghost_left_eye_x + 5;
       ghost_right_eye_x =  ghost_right_eye_x + 10;
-   }
-   else {
+   } else {
       ghost_left_eye_x =  ghost_left_eye_x + 15;
       ghost_right_eye_x =  ghost_right_eye_x + 20;
    }
-   rect(ghost_right_eye_x, ghost_draw_y+6, 4, 5);
-   rect(ghost_left_eye_x, ghost_draw_y+4, 4, 5);
+   rect(ghost_right_eye_x, ghost_draw_y + 6, 4, 5);
+   rect(ghost_left_eye_x, ghost_draw_y + 4, 4, 5);
    // draw mouth
-   rect(ghost_left_eye_x, ghost_draw_y+12, 12, 10);
+   rect(ghost_left_eye_x, ghost_draw_y + 12, 12, 10);
 
 }
 
@@ -1063,7 +1110,7 @@ proc draw_game_over_text() {
 }
 
 proc maybe_play_game_over_noise() {
-   if (!GAME_OVER) {
+   if !GAME_OVER {
      let starting_freq: u32 = 590;
      let ending_freq: u32 = 110;
      tone(starting_freq| (ending_freq << 16), 60, DEFAULT_VOLUME, TONE_PULSE1 | TONE_MODE3);
