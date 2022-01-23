@@ -261,13 +261,13 @@ proc make_maps() {
       w,w,w,w,w,w,w,w,w,w,
    ];
 
-      HALLWAY_ROOMS[4] =
+   HALLWAY_ROOMS[4] =
    [
       w,w,w,w,w,w,w,w,w,w,
       o,w,w,w,w,w,w,w,w,o,
       o,o,w,w,w,w,w,w,o,o,
       o,o,o,w,w,w,w,o,o,o,
-      o,o,o,o,w,w,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,c,o,o,c,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
