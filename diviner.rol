@@ -847,14 +847,13 @@ proc sim(dt: f64) {
                }
             }
          }
-         if touched_spike and !touched_door {
+         if touched_door {
+            handle_door_collision();
+         } else if touched_spike {
             // hit a spike, wasn't touching door. end early.
             maybe_play_game_over_noise();
             GAME_OVER = true;
             return;
-         }
-         if touched_door {
-            handle_door_collision();
          }
       } else if JUMP_STATE == JumpState::Standing {
          let ontop = false;
@@ -1049,7 +1048,7 @@ static FRAME_COUNT:u32 = 0;
 
 proc advance_animation_and_return_x(anim_cycle: &AnimationCycle, seconds_to_advance: f64) -> i32 {
    (*anim_cycle).current_time_in_animation_seconds = (*anim_cycle).current_time_in_animation_seconds + seconds_to_advance;
-   
+
    if ((*anim_cycle).current_time_in_animation_seconds >= (*anim_cycle).animation_length_seconds) {
        if (*anim_cycle).repeat_cycle {
          (*anim_cycle).current_time_in_animation_seconds = 0.0;
@@ -1244,4 +1243,4 @@ static DOOR_CYCLE : AnimationCycle = AnimationCycle {
    offset_between_sprites: 16,
    repeat_cycle: false,
 };
-// 
+//
