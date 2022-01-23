@@ -21,11 +21,11 @@ static TIME_DOING_DOOR: u64;
 
 static LAST_GAMEPAD: u8;
 // Guaranteed to have left-right exits.
-static HALLWAY_ROOMS: [[Tile; 100]; 3];
+static HALLWAY_ROOMS: [[Tile; 100]; 5];
 // Guaranteed to have top entry and left-right exit.
-static LANDING_ROOMS: [[Tile; 100]; 2];
+static LANDING_ROOMS: [[Tile; 100]; 5];
 // Guaranteed to have a downward exit and left-right exit.
-static DROP_ROOMS: [[Tile; 100]; 4];
+static DROP_ROOMS: [[Tile; 100]; 7];
 // No guarantees on exit.
 static BONUS_ROOMS: [[Tile; 100]; 1];
 
@@ -161,6 +161,49 @@ proc make_maps() {
       w,w,s,o,o,o,o,s,w,w,
    ];
 
+   DROP_ROOMS[4] =
+    [
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      o,o,o,o,s,s,o,o,o,o,
+      o,o,w,o,w,w,o,w,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,w,o,o,o,o,o,o,w,o,
+      w,w,s,o,o,o,o,s,w,w,
+   ];
+
+
+   DROP_ROOMS[5] =
+   [
+      o,o,o,o,o,o,o,o,o,o,
+      w,o,o,o,o,o,o,o,o,w,
+      w,w,o,o,o,o,o,o,w,w,
+      w,w,o,o,o,o,o,o,w,w,
+      w,w,o,o,o,o,o,o,w,w,
+      w,w,o,o,o,o,o,o,w,w,
+      w,w,o,o,o,o,o,o,w,w,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      w,w,w,w,o,o,w,w,w,w,
+   ];
+
+
+   DROP_ROOMS[6] =
+   [
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,c,o,o,o,o,c,o,o,
+      o,o,w,o,o,o,o,w,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      w,o,o,w,w,w,w,o,o,w,
+   ];
 
    HALLWAY_ROOMS[0] =
    [
@@ -204,6 +247,35 @@ proc make_maps() {
       w,w,w,w,w,w,w,w,w,w,
    ];
 
+   HALLWAY_ROOMS[3] =
+   [
+      w,w,w,w,w,w,w,w,w,w,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,c,o,o,o,o,
+      o,c,o,o,o,w,o,o,c,o,
+      o,w,o,s,s,s,s,o,w,o,
+      o,o,o,w,w,w,w,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+
+      HALLWAY_ROOMS[4] =
+   [
+      w,w,w,w,w,w,w,w,w,w,
+      o,w,w,w,w,w,w,w,w,o,
+      o,o,w,w,w,w,w,w,o,o,
+      o,o,o,w,w,w,w,o,o,o,
+      o,o,o,o,w,w,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,c,o,o,c,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,s,s,o,o,s,s,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+
+
 
    LANDING_ROOMS[0] =
    [
@@ -220,15 +292,57 @@ proc make_maps() {
    ];
    LANDING_ROOMS[1] =
    [
+      w,o,o,o,o,o,o,o,o,w,
+      o,w,o,o,o,o,o,o,w,o,
+      o,w,w,o,o,o,o,w,w,o,
+      o,o,o,w,o,o,w,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,s,s,o,o,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+
+     LANDING_ROOMS[2] =
+   [
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,w,w,w,w,o,o,o,
+      o,c,o,o,o,o,o,o,c,o,
+      o,c,o,o,o,o,o,o,c,o,
+      o,w,o,o,o,o,o,o,w,o,
+      o,o,o,o,w,w,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,s,s,o,o,o,o,
+      w,w,w,w,w,w,w,w,w,w,
+   ];
+
+   LANDING_ROOMS[3] =
+   [
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,c,c,o,o,o,o,
+      o,o,o,o,w,w,o,o,o,o,
+      o,o,o,o,o,o,o,o,o,o,
+      c,o,s,o,o,o,o,s,o,c,
+      w,w,w,w,o,o,w,w,w,w,
+   ];
+
+     LANDING_ROOMS[4] =
+   [
+      w,o,o,o,o,o,o,o,o,o,
+      o,w,o,o,o,o,o,o,o,o,
+      o,o,w,w,o,o,o,o,o,c,
+      o,o,o,o,w,o,o,o,c,w,
+      o,o,o,o,o,w,o,o,w,o,
+      o,o,o,o,o,o,o,w,o,o,
       o,o,o,o,o,o,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
-      o,o,o,o,o,o,o,o,o,o,
-      o,o,o,o,o,o,o,o,o,o,
+      o,o,o,o,o,o,s,s,o,o,
       w,w,w,w,w,w,w,w,w,w,
    ];
 
@@ -379,13 +493,13 @@ proc carve_path() {
 
       let map = DROP_ROOMS[0];
       if is_drop {
-         let drop_map = rand_range(0, 2);
+         let drop_map = rand_range(0, 6);
          map = DROP_ROOMS[drop_map truncate usize];
        } else if is_landing {
-         let landing_map = rand_range(0, 1);
+         let landing_map = rand_range(0, 4);
          map = LANDING_ROOMS[landing_map truncate usize];
       } else if is_hallway {
-         let hallway_map = rand_range(0, 2);
+         let hallway_map = rand_range(0, 4);
          map = HALLWAY_ROOMS[hallway_map truncate usize];
       } else {
          map = BONUS_ROOMS[0];
