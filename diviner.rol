@@ -307,13 +307,13 @@ proc make_maps() {
      LANDING_ROOMS[2] =
    [
       o,o,o,o,o,o,o,o,o,o,
-      o,o,o,w,w,w,w,o,o,o,
-      o,c,o,o,o,o,o,o,c,o,
+      o,o,o,o,o,o,o,o,o,o,
+      o,c,o,w,w,w,w,o,c,o,
       o,c,o,o,o,o,o,o,c,o,
       o,w,o,o,o,o,o,o,w,o,
       o,o,o,o,w,w,o,o,o,o,
       o,o,o,o,o,o,o,o,o,o,
-      o,o,o,o,o,o,o,o,o,o,
+      o,o,w,o,o,o,o,w,o,o,
       o,o,o,o,s,s,o,o,o,o,
       w,w,w,w,w,w,w,w,w,w,
    ];
