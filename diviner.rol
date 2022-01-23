@@ -430,10 +430,12 @@ proc carve_path() {
       let where_to_go = rand_range(1, 5);
 
       let direction: i32 = 0;
+      let next_direction: i32 = 0;
       if where_to_go == 1 or where_to_go == 2 {
          // left
          if (current_cell % 4 == 0) {
             direction = 4;
+            next_direction = 1;
          } else {
             direction = -1;
          }
@@ -441,6 +443,7 @@ proc carve_path() {
          // right
          if (current_cell % 4 == 3) {
             direction = 4;
+            next_direction = -1;
          } else {
             direction = 1;
          }
@@ -455,31 +458,66 @@ proc carve_path() {
          break;
       }
 
-      let current_row = current_cell / 4;
-      let current_col = current_cell % 4;
 
-      let cur_cell_usize = current_cell transmute usize;
-      let resulting_cell = (current_cell + direction) transmute usize;
-      if direction == -1 {
-         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
-         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
-         resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
-         resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
-      } else if direction == 1 {
-         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
-         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
-         resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
-         resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
-      } else if direction == 4 {
-         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
-         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
-         resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
-         resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
-         resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | DOWN_EXIT;
-         resulting_types[resulting_cell] = resulting_types[resulting_cell] | UP_EXIT;
+
+      {
+         let current_row = current_cell / 4;
+         let current_col = current_cell % 4;
+
+         let cur_cell_usize = current_cell transmute usize;
+         let resulting_cell = (current_cell + direction) transmute usize;
+         if direction == -1 {
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
+         } else if direction == 1 {
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
+         } else if direction == 4 {
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | DOWN_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | UP_EXIT;
+         }
+
+         current_cell = current_cell + direction;
       }
 
-      current_cell = current_cell + direction;
+      if next_direction > 0 {
+         direction = next_direction;
+         next_direction = 0;
+
+         let current_row = current_cell / 4;
+         let current_col = current_cell % 4;
+
+         let cur_cell_usize = current_cell transmute usize;
+         let resulting_cell = (current_cell + direction) transmute usize;
+         if direction == -1 {
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
+         } else if direction == 1 {
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
+         } else if direction == 4 {
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | LEFT_EXIT;
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | RIGHT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | LEFT_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | RIGHT_EXIT;
+            resulting_types[cur_cell_usize] = resulting_types[cur_cell_usize] | DOWN_EXIT;
+            resulting_types[resulting_cell] = resulting_types[resulting_cell] | UP_EXIT;
+         }
+
+         current_cell = current_cell + direction;
+      }
    }
 
    let max: usize = 16;
