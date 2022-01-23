@@ -390,8 +390,8 @@ proc carve_path() {
          loop {
             let test_tile = rand_range(10, 99) truncate usize;
 
-            if map[test_tile] == Tile::Wall and map[test_tile - 9] == Tile::Air {
-               start_tile = test_tile - 9;
+            if map[test_tile] == Tile::Wall and map[test_tile - 10] == Tile::Air {
+               start_tile = test_tile - 10;
                break;
             }
          }
@@ -410,8 +410,8 @@ proc carve_path() {
          loop {
             let test_tile = rand_range(10, 99) truncate usize;
 
-            if map[test_tile] == Tile::Wall and map[test_tile - 9] == Tile::Air {
-               map[test_tile - 9] = Tile::Door;
+            if map[test_tile] == Tile::Wall and map[test_tile - 10] == Tile::Air {
+               map[test_tile - 10] = Tile::Door;
                break;
             }
          }
