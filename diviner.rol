@@ -413,8 +413,7 @@ proc reset_game(starting_score: u32) {
    }
 
    // bottom row
-   max = 1600;
-   for i in 1560..max {
+   for i in 1560..TILES.length {
       TILES[i] = Tile::Wall;
    }
 
@@ -552,8 +551,7 @@ proc carve_path() {
       }
    }
 
-   let max: usize = 16;
-   for cell_i in 0..max {
+   for cell_i in 0..resulting_types.length {
       let current_row = cell_i / 4;
       let current_col = cell_i % 4;
       let cell_flags = resulting_types[cell_i];
@@ -563,13 +561,13 @@ proc carve_path() {
 
       let map = DROP_ROOMS[0];
       if is_drop {
-         let drop_map = rand_range(0, 6);
+         let drop_map = rand_range(0, (DROP_ROOMS.length - 1) extend u64);
          map = DROP_ROOMS[drop_map truncate usize];
        } else if is_landing {
-         let landing_map = rand_range(0, 4);
+         let landing_map = rand_range(0, (LANDING_ROOMS.length - 1) extend u64);
          map = LANDING_ROOMS[landing_map truncate usize];
       } else if is_hallway {
-         let hallway_map = rand_range(0, 4);
+         let hallway_map = rand_range(0, (HALLWAY_ROOMS.length - 1) extend u64);
          map = HALLWAY_ROOMS[hallway_map truncate usize];
       } else {
          map = BONUS_ROOMS[0];
@@ -579,7 +577,7 @@ proc carve_path() {
          // set the player spawn position
          let start_tile: usize = 0;
          loop {
-            let test_tile = rand_range(10, 99) truncate usize;
+            let test_tile = rand_range(10, map.length extend u64) truncate usize;
 
             if test_tile % 10 == 0 or test_tile % 10 == 9 {
                continue;
@@ -603,7 +601,7 @@ proc carve_path() {
       if cell_i == ending_cell transmute usize {
          // stick an exit into the map
          loop {
-            let test_tile = rand_range(10, 99) truncate usize;
+            let test_tile = rand_range(10, map.length extend u64) truncate usize;
 
             if test_tile % 10 == 0 or test_tile % 10 == 9 {
                continue;
@@ -788,8 +786,7 @@ proc sim(dt: f64) {
       PLAYER_MOVED_ON_LAST_FRAME = false;
    }
 
-   let len: usize = 1600;
-   for i in 0..len {
+   for i in 0..TILES.length {
       if TILES[i] == Tile::Air {
          continue;
       }
@@ -841,7 +838,7 @@ proc sim(dt: f64) {
             JUMP_STATE = JumpState::Falling;
          }
 
-         for i in 0..len {
+         for i in 0..TILES.length {
             if TILES[i] == Tile::Air {
                continue;
             }
@@ -870,7 +867,7 @@ proc sim(dt: f64) {
 
          let touched_door: bool = false;
          let touched_spike: bool = false;
-         for i in 0..len {
+         for i in 0..TILES.length {
             if TILES[i] == Tile::Air{
                continue;
             }
@@ -912,7 +909,7 @@ proc sim(dt: f64) {
          }
       } else if JUMP_STATE == JumpState::Standing {
          let ontop = false;
-         for i in 0..len {
+         for i in 0..TILES.length {
             if TILES[i] == Tile::Air or TILES[i] == Tile::Coin or TILES[i] == Tile::Spike or TILES[i] == Tile::Door {
                continue;
             }
@@ -1014,9 +1011,7 @@ proc update() {
          draw_ghost(camera_offset_x, camera_offset_y);
       }
 
-
-      let len: usize = 1600;
-      for i in 0..len {
+      for i in 0..TILES.length {
          let x = ((i % 40) * 16) truncate f64;
          let y = ((i / 40) * 16) truncate f64;
          if TILES[i] == Tile::Air {
